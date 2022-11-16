@@ -37,6 +37,8 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float g2 = ( matrix[3] * r) + ( matrix[4] * g) + ( matrix[5] * b);
     float b2 = ( matrix[6] * r) + ( matrix[7] * g) + ( matrix[8] * b);
 
+    // TODO: Apply an appropriate gain to the r2/g2/b2 values so that middle gray is maintained.
+
     float r3 = linear_to_dwg(r2);
     float g3 = linear_to_dwg(g2);
     float b3 = linear_to_dwg(b2);
