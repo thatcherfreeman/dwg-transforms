@@ -21,7 +21,16 @@ def log2lin(inVec):
 x = np.linspace(0.0, 1.0, 1024)
 y = lin2log(log2lin(x))
 
-plt.plot(x, y, label="lin2log(log2lin(x))")
-plt.plot([0.0, 1.0], [0.0, 1.0], label="y=x")
+# plt.plot(x, y, label="lin2log(log2lin(x))")
+# plt.plot([0.0, 1.0], [0.0, 1.0], label="y=x")
+# plt.legend()
+# plt.show()
+
+plt.plot(np.log2(x), x**(1/3.6), label="3.6 gamma function")
+plt.plot(np.log2(x), (8/9)*(0.125 * np.log2(x) + 1), label="y=(8/9)*(0.125 * log2(x) + 1)")
+# plt.plot([-8, 1], [0, 1], label="y=.125 x")
+plt.plot(np.log2(x), lin2log(x), label="lin2log(x)")
 plt.legend()
+plt.xlabel("log_2 x")
+plt.ylabel("code value")
 plt.show()

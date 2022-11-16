@@ -1,0 +1,61 @@
+__DEVICE__ float logv3_to_linear(float invec)
+{
+    // This function is probably bad
+    float u = _exp2f((invec / 0.125) - 8.0);
+    float x = 1.1612159730893894;
+    float y = 0.6090138106343165;
+    float out = _powf(u, _mix(x, y, invec));
+    return out;
+}
+
+__DEVICE__ float3 resaturate(float r, float g, float b) {
+    float3 output = make_float3(r, g, b);
+    return output;
+}
+
+__DEVICE__ inline float linear_to_dwg(float x)
+{
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+// Used values calculated from http://color.support/colorspacecalculator.html
+// Assumed Rec709 primaries (after resaturation)
+__CONSTANT__ float matrix[9] = {
+    0.562767,  0.323517,  0.113716,
+    0.077755,  0.749577,  0.172668,
+    0.064669,  0.191999,  0.743332,
+};
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    float r = logv3_to_linear(p_R);
+    float g = logv3_to_linear(p_G);
+    float b = logv3_to_linear(p_B);
+
+    float3 resaturated = resaturate(r, g, b);
+    r = resaturated.x;
+    g = resaturated.y;
+    b = resaturated.z;
+
+    float r2 = ( matrix[0] * r) + ( matrix[1] * g) + ( matrix[2] * b);
+    float g2 = ( matrix[3] * r) + ( matrix[4] * g) + ( matrix[5] * b);
+    float b2 = ( matrix[6] * r) + ( matrix[7] * g) + ( matrix[8] * b);
+
+    float r3 = linear_to_dwg(r2);
+    float g3 = linear_to_dwg(g2);
+    float b3 = linear_to_dwg(b2);
+
+    float3 res = to_float3(r3, g3, b3);
+    return res;
+}

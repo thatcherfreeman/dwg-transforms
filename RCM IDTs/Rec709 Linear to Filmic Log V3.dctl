@@ -1,0 +1,45 @@
+DEFINE_UI_PARAMS(no_log, Skip Log Encoding, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(skip_desat, Skip Desaturation, DCTLUI_CHECK_BOX, 0)
+
+__DEVICE__ float linear_to_logv3(float invec)
+{
+    float l = (_log2f(invec) + 8.0) * 0.125;
+    float x = _mix(_fmaxf(0.0, l), invec, 0.1267);
+    float y = 0.28985507246;
+    float out = _fmaxf(0.0, _mix(x, _powf(invec, y), invec));
+    return out;
+}
+
+__DEVICE__ inline float dot_product(float3 a, float3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+__DEVICE__ float3 desaturate(float3 invec) {
+    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
+    float o = 0.16667 * _logf(p) + 1.0;
+    float3 monochrome = make_float3(p, p, p); // might not be what they mean
+    float3 output = _mix(monochrome, invec, o); // `monochrome` has more weight for darker pixels.
+    return output;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    float3 color = make_float3(p_R, p_G, p_B);
+    float3 desat;
+    if (skip_desat) {
+        desat = color;
+    } else {
+        desat = desaturate(color);
+    }
+
+    if (no_log) {
+        return desat;
+    }
+
+    float r = linear_to_logv3(desat.x);
+    float g = linear_to_logv3(desat.y);
+    float b = linear_to_logv3(desat.z);
+
+    float3 output = make_float3(r, g, b);
+    return output;
+}
