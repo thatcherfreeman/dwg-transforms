@@ -58,6 +58,6 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float g3 = linear_to_dwg(g2);
     float b3 = linear_to_dwg(b2);
 
-    float3 res = to_float3(r3, g3, b3);
+    float3 res = make_float3(r3, g3, b3);
     return res;
 }
