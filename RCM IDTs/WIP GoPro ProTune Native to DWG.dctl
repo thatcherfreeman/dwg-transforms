@@ -1,5 +1,6 @@
 DEFINE_UI_PARAMS(no_log, Skip Log Encoding, DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(skip_matrix, Skip Matrix, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(color_profile_input, Profile, DCTLUI_COMBO_BOX, 0, { FLAT, COLOR }, { Flat Profile, Color Profile })
 
 __DEVICE__ inline float protune_to_linear(float t)
 {
@@ -24,6 +25,7 @@ __DEVICE__ inline float linear_to_dwg(float x)
 }
 
 // Used values calculated from http://color.support/colorspacecalculator.html
+// Native color primaries taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
 __CONSTANT__ float matrix[9] = {
      0.711228,  0.234219,  0.054553,
     -0.046155,  0.948576,  0.097580,
@@ -36,7 +38,18 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float g = protune_to_linear(p_G);
     float b = protune_to_linear(p_B);
 
-    float r2 = r, g2 = g, b2 = b;
+    if (color_profile_input == COLOR) {
+        // Convert to flat profile via a gamma adjustment
+        r = _powf(r, 0.75);
+        g = _powf(g, 0.75);
+        b = _powf(b, 0.75);
+    } else if (color_profile_input == FLAT) {
+        // Do nothing, assume Flat is linear.
+    }
+
+    float r2 = r;
+    float g2 = g;
+    float b2 = b;
     if (!skip_matrix) {
         r2 = ( matrix[0] * r) + ( matrix[1] * g) + ( matrix[2] * b);
         g2 = ( matrix[3] * r) + ( matrix[4] * g) + ( matrix[5] * b);
