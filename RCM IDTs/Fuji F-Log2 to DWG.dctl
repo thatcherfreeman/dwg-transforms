@@ -1,4 +1,4 @@
-__DEVICE__ inline float flog2_to_linear(float t)
+__DEVICE__ float flog2_to_linear(float t)
 {
     const float a = 0.555556f;
     const float b = 0.064829f;
@@ -16,7 +16,7 @@ __DEVICE__ inline float flog2_to_linear(float t)
     }
 }
 
-__DEVICE__ inline float linear_to_dwg(float x)
+__DEVICE__ float linear_to_dwg(float x)
 {
     const float a = 0.0075f;
     const float b = 7.0f;

@@ -2,13 +2,13 @@ DEFINE_UI_PARAMS(no_log, Skip Log Encoding, DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(skip_matrix, Skip Matrix, DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(color_profile_input, Profile, DCTLUI_COMBO_BOX, 0, { FLAT, COLOR }, { Flat Profile, Color Profile })
 
-__DEVICE__ inline float protune_to_linear(float t)
+__DEVICE__ float protune_to_linear(float t)
 {
     // Protune function taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
     return (_powf(113.0, t) - 1.0) / 112.0;
 }
 
-__DEVICE__ inline float linear_to_dwg(float x)
+__DEVICE__ float linear_to_dwg(float x)
 {
     const float a = 0.0075f;
     const float b = 7.0f;

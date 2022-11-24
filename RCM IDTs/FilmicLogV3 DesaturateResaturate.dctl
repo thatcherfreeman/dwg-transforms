@@ -1,0 +1,57 @@
+DEFINE_UI_PARAMS(desat, Desaturate, DCTLUI_CHECK_BOX, 1)
+DEFINE_UI_PARAMS(resat, Resaturate, DCTLUI_CHECK_BOX, 1)
+
+
+__DEVICE__ inline float dot_product(float3 a, float3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// if c = mix(a, b, t), then a = unmixf(b, c, t) and b = unmixf(a, c, (1-t))
+__DEVICE__ float unmixf(float b, float c, float t) {
+    if (t == 1) {
+        return 0;
+    } else {
+        return (c - b * t) / (1 - t);
+    }
+}
+
+__DEVICE__ inline float3 unmixf3(float3 b, float3 c, float t) {
+    float3 output = make_float3(
+        unmixf(b.x, c.x, t),
+        unmixf(b.y, c.y, t),
+        unmixf(b.z, c.z, t)
+    );
+    return output;
+}
+
+__DEVICE__ float3 desaturate(float3 invec) {
+    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
+    float o = 0.16667 * _logf(p) + 1.0;
+    float3 monochrome = make_float3(p, p, p); // might not be what they mean
+    float3 output = _mix(monochrome, invec, o); // `monochrome` has more weight for darker pixels.
+    return output;
+}
+
+__DEVICE__ float3 resaturate(float3 invec) {
+    // as desaturate is a linear mixture between the saturated vector and monochrome
+    // the desaturated vector should have the same luminance.
+    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
+    float3 monochrome = make_float3(p, p, p);
+
+    float o = 0.16667 * _logf(p) + 1.0;
+
+    float3 output = unmixf3(monochrome, invec, 1.0 - o);
+    return output;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    float3 curr_color = make_float3(p_R, p_G, p_B);
+    if (desat) {
+        curr_color = desaturate(curr_color);
+    }
+    if (resat) {
+        curr_color = resaturate(curr_color);
+    }
+    return curr_color;
+}

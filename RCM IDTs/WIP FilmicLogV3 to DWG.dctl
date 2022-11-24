@@ -1,3 +1,26 @@
+__DEVICE__ inline float dot_product(float3 a, float3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// if c = mix(a, b, t), then a = unmixf(b, c, t) and b = unmixf(a, c, (1-t))
+__DEVICE__ float unmixf(float b, float c, float t) {
+    if (t == 1) {
+        return 0;
+    } else {
+        return (c - b * t) / (1 - t);
+    }
+}
+
+__DEVICE__ inline float3 unmixf3(float3 b, float3 c, float t) {
+    float3 output = make_float3(
+        unmixf(b.x, c.x, t),
+        unmixf(b.y, c.y, t),
+        unmixf(b.z, c.z, t)
+    );
+    return output;
+}
+
+
 __DEVICE__ float logv3_to_linear(float invec)
 {
     // This function is probably bad
@@ -9,13 +32,19 @@ __DEVICE__ float logv3_to_linear(float invec)
     return out;
 }
 
-__DEVICE__ float3 resaturate(float r, float g, float b) {
-    float3 output = make_float3(r, g, b);
-    // TODO: invert the desaturation function.
+__DEVICE__ float3 resaturate(float3 invec) {
+    // as desaturate is a linear mixture between the saturated vector and monochrome
+    // the desaturated vector should have the same luminance.
+    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
+    float3 monochrome = make_float3(p, p, p);
+
+    float o = 0.16667 * _logf(p) + 1.0;
+
+    float3 output = unmixf3(monochrome, invec, 1.0 - o);
     return output;
 }
 
-__DEVICE__ inline float linear_to_dwg(float x)
+__DEVICE__ float linear_to_dwg(float x)
 {
     const float a = 0.0075f;
     const float b = 7.0f;
@@ -32,7 +61,7 @@ __DEVICE__ inline float linear_to_dwg(float x)
 }
 
 // Used values calculated from http://color.support/colorspacecalculator.html
-// Assumed Rec709 primaries (after resaturation)
+// Assumed Rec709 primaries (after resaturation), to DWG
 __CONSTANT__ float matrix[9] = {
     0.562767,  0.323517,  0.113716,
     0.077755,  0.749577,  0.172668,
@@ -45,7 +74,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float g = logv3_to_linear(p_G);
     float b = logv3_to_linear(p_B);
 
-    float3 resaturated = resaturate(r, g, b);
+    float3 resaturated = resaturate(make_float3(r, g, b));
     r = resaturated.x;
     g = resaturated.y;
     b = resaturated.z;
