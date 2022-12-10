@@ -1,0 +1,99 @@
+DEFINE_UI_PARAMS(lw, Screen Luminance White, DCTLUI_VALUE_BOX, 100.0)
+DEFINE_UI_PARAMS(lb, Screen Luminance Black, DCTLUI_VALUE_BOX, 0.1)
+DEFINE_UI_PARAMS(gamma, Gamma Value, DCTLUI_VALUE_BOX, 2.4)
+DEFINE_UI_PARAMS(appx1_b, Appendix1 Brightness Value, DCTLUI_VALUE_BOX, 0.0)
+DEFINE_UI_PARAMS(apply_oetf, Apply OETF, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(direction, Direction, DCTLUI_COMBO_BOX, 1, { ANN1_EOTF, ANN1_EOTF_INV, APP1_EOTF, APP1_EOTF_INV, NONE }, { Annex1 EOTF, Annex1 EOTF Inverse, Appx1 EOTF, Appx1 EOTF Inverse, None})
+
+
+__DEVICE__ float annex_1_eotf(float v, float lw, float lb, float gamma) {
+    const float a = _powf(_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma), gamma);
+    const float b = _powf(lb, 1.0/gamma) / (_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma));
+    float l = a * _powf(_fmaxf(v + b, 0.0), gamma);
+    // Not in the eotf spec, but scaling by lw so that the result is in the 0-1 range.
+    return l / lw;
+}
+
+__DEVICE__ float annex_1_eotf_inv(float l, float lw, float lb, float gamma) {
+    const float a = _powf(_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma), gamma);
+    const float b = _powf(lb, 1.0/gamma) / (_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma));
+    float v = _powf(l * lw / a, 1.0 / gamma) - b;
+    return v;
+}
+
+__DEVICE__ float appx_1_eotf(float v, float lw, float appx1_b) {
+    const float vc = 0.35;
+    const float a1 = 2.6;
+    const float a2 = 3.0;
+    const float b = appx1_b;
+    const float k = lw / _powf(1.0 + b, a1);
+    float l;
+    if (v < vc) {
+        l = k * _powf(vc + b, a1 - a2) * _powf(v + b, a2);
+    } else {
+        l = k * _powf(v + b, a1);
+    }
+    // Not in eotf spec, scaling by lw so result is in 0-1 range.
+    return l / lw;
+}
+
+__DEVICE__ float appx_1_eotf_inv(float l, float lw, float appx1_b) {
+    const float vc = 0.35;
+    const float a1 = 2.6;
+    const float a2 = 3.0;
+    const float b = appx1_b;
+    const float k = lw / _powf(1.0 + b, a1);
+    float cutoff = k * _powf(vc + b, a1);
+    float v;
+    if (l * lw < cutoff) {
+        v = _powf(l * lw / (k * _powf(vc + b, a1 - a2)), 1.0 / a2) - b;
+    } else {
+        v = _powf(l * lw / k, 1.0/a1) - b;
+    }
+    return v;
+}
+
+
+__DEVICE__ float oetf(float l) {
+    float v;
+    if (l > 0.018) {
+        v = 1.099 * _powf(l, 0.45) - 0.099;
+    } else {
+        v = 4.500 * l;
+    }
+    return v;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+
+    float3 output = make_float3(p_R, p_G, p_B);
+    if (apply_oetf) {
+        output.x = oetf(output.x);
+        output.y = oetf(output.y);
+        output.z = oetf(output.z);
+    }
+
+    if (direction == ANN1_EOTF) {
+        output.x = annex_1_eotf(output.x, lw, lb, gamma);
+        output.y = annex_1_eotf(output.y, lw, lb, gamma);
+        output.z = annex_1_eotf(output.z, lw, lb, gamma);
+    } else if (direction == ANN1_EOTF_INV) {
+        output.x = annex_1_eotf_inv(output.x, lw, lb, gamma);
+        output.y = annex_1_eotf_inv(output.y, lw, lb, gamma);
+        output.z = annex_1_eotf_inv(output.z, lw, lb, gamma);
+    } else if (direction == APP1_EOTF) {
+        output.x = appx_1_eotf(output.x, lw, appx1_b);
+        output.y = appx_1_eotf(output.y, lw, appx1_b);
+        output.z = appx_1_eotf(output.z, lw, appx1_b);
+    } else if (direction == APP1_EOTF_INV) {
+        output.x = appx_1_eotf_inv(output.x, lw, appx1_b);
+        output.y = appx_1_eotf_inv(output.y, lw, appx1_b);
+        output.z = appx_1_eotf_inv(output.z, lw, appx1_b);
+    } else {
+        // direction == NONE, skip EOTF step
+    }
+
+
+    return output;
+}
