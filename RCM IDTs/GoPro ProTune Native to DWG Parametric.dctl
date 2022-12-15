@@ -4,9 +4,7 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 __DEVICE__ float protune_to_linear(float t) {
     // Protune function taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
-    // const float gain = 0.18/0.13; // Estimated from some gray card exposures.
-    const float gain = 1.46014;
-    return gain * (_powf(113.0, t) - 1.0) / 112.0;
+    return (_powf(113.0, t) - 1.0) / 112.0;
 }
 
 __DEVICE__ float linear_to_dwg(float x) {
@@ -49,6 +47,10 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // else if (color_profile_input == FLAT) {
     //     // Do nothing, Flat is already linear.
     // }
+
+    // const float gain = 0.18/0.13; // Estimated from some gray card exposures.
+    const float gain = 1.46014;
+    rgb *= gain;
 
     // Used values calculated from http://color.support/colorspacecalculator.html
     // Native color primaries taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
