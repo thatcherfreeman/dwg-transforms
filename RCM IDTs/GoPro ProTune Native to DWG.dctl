@@ -37,9 +37,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     if (color_profile_input == COLOR) {
         // Convert to flat profile via a gamma adjustment
-        rgb.x = _powf(rgb.x, 0.75);
-        rgb.y = _powf(rgb.y, 0.75);
-        rgb.z = _powf(rgb.z, 0.75);
+        rgb.x = _copysignf(_powf(_fabs(rgb.x), 0.75), rgb.x);
+        rgb.y = _copysignf(_powf(_fabs(rgb.y), 0.75), rgb.y);
+        rgb.z = _copysignf(_powf(_fabs(rgb.z), 0.75), rgb.z);
     }
     // else if (color_profile_input == FLAT) {
     //     // Do nothing, Flat is already linear.
