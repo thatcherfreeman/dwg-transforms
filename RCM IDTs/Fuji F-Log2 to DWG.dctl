@@ -9,11 +9,13 @@ __DEVICE__ float flog2_to_linear(float t)
     const float cut1 = 0.000889f;
     const float cut2 = 0.100686685370811f;
 
+    float out;
     if (t >= cut2) {
-        return ((_exp10f((t - d) / c) - b) / a);
+        out = ((_exp10f((t - d) / c) - b) / a);
     } else {
-        return ((t - f) / e);
+        out = ((t - f) / e);
     }
+    return out;
 }
 
 __DEVICE__ float linear_to_dwg(float x)
