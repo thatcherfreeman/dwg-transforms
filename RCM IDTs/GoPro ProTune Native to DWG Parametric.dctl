@@ -1,3 +1,6 @@
+// Written by Thatcher Freeman
+// Based on clips shot on a GoPro Hero 7.
+
 DEFINE_UI_PARAMS(color_profile_input, Profile, DCTLUI_COMBO_BOX, 0, {FLAT, COLOR}, {GoPro Flat Profile, GoPro Color Profile})
 DEFINE_UI_PARAMS(output_tone_curve, Output Tone Curve, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
