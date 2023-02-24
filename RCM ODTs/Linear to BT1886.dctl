@@ -2,8 +2,7 @@ DEFINE_UI_PARAMS(lw, Screen Luminance White, DCTLUI_VALUE_BOX, 100.0)
 DEFINE_UI_PARAMS(lb, Screen Luminance Black, DCTLUI_VALUE_BOX, 0.1)
 DEFINE_UI_PARAMS(gamma, Gamma Value, DCTLUI_VALUE_BOX, 2.4)
 DEFINE_UI_PARAMS(appx1_b, Appendix1 Brightness Value, DCTLUI_VALUE_BOX, 0.0)
-DEFINE_UI_PARAMS(apply_oetf, Apply OETF, DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(direction, Direction, DCTLUI_COMBO_BOX, 1, { ANN1_EOTF, ANN1_EOTF_INV, APP1_EOTF, APP1_EOTF_INV, NONE }, { Annex1 EOTF, Annex1 EOTF Inverse, Appx1 EOTF, Appx1 EOTF Inverse, None})
+DEFINE_UI_PARAMS(direction, Direction, DCTLUI_COMBO_BOX, 1, { ANN1_EOTF, ANN1_EOTF_INV, APP1_EOTF, APP1_EOTF_INV, OETF, OETF_INV, NONE }, { Annex1 EOTF, Annex1 EOTF Inverse, Appx1 EOTF, Appx1 EOTF Inverse, OETF, OETF Inv, None})
 
 
 __DEVICE__ float annex_1_eotf(float v, float lw, float lb, float gamma) {
@@ -64,15 +63,20 @@ __DEVICE__ float oetf(float l) {
     return v;
 }
 
+__DEVICE__ float inv_oetf(float v) {
+    float l;
+    if (v > 0.018 * 4.500) {
+        l = _powf(((v + 0.099) / 1.099), 1.0/0.45);
+    } else {
+        l = v / 4.500;
+    }
+    return l;
+}
+
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
 {
 
     float3 output = make_float3(p_R, p_G, p_B);
-    if (apply_oetf) {
-        output.x = oetf(output.x);
-        output.y = oetf(output.y);
-        output.z = oetf(output.z);
-    }
 
     if (direction == ANN1_EOTF) {
         output.x = annex_1_eotf(output.x, lw, lb, gamma);
@@ -90,10 +94,16 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         output.x = appx_1_eotf_inv(output.x, lw, appx1_b);
         output.y = appx_1_eotf_inv(output.y, lw, appx1_b);
         output.z = appx_1_eotf_inv(output.z, lw, appx1_b);
+    } else if (direction == OETF) {
+        output.x = oetf(output.x);
+        output.y = oetf(output.y);
+        output.z = oetf(output.z);
+    } else if (direction == OETF_INV) {
+        output.x = inv_oetf(output.x);
+        output.y = inv_oetf(output.y);
+        output.z = inv_oetf(output.z);
     } else {
         // direction == NONE, skip EOTF step
     }
-
-
     return output;
 }
