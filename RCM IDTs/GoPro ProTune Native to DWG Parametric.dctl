@@ -2,7 +2,7 @@
 // Based on clips shot on a GoPro Hero 7.
 
 DEFINE_UI_PARAMS(color_profile_input, Profile, DCTLUI_COMBO_BOX, 0, {FLAT, COLOR}, {GoPro Flat Profile, GoPro Color Profile})
-DEFINE_UI_PARAMS(output_tone_curve, Output Tone Curve, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
 __DEVICE__ float protune_to_linear(float t) {
@@ -51,7 +51,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     //     // Do nothing, Flat is already linear.
     // }
 
-    // const float gain = 0.18/0.13; // Estimated from some gray card exposures.
+    // Gain estimated from some auto exposures on gray card and color chart.
     const float gain = 1.46014;
     rgb *= gain;
 
@@ -80,7 +80,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         );
     } else {
         // output_tone_curve == LINEAR
-        res = make_float3(rgb2.x, rgb2.y, rgb2.z);
+        res = rgb2;
     }
     return res;
 }

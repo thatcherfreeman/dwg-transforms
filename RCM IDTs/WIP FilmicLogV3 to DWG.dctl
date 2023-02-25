@@ -1,5 +1,8 @@
-DEFINE_UI_PARAMS(no_log, Skip Log Encoding, DCTLUI_CHECK_BOX, 0)
-DEFINE_UI_PARAMS(skip_matrix, Skip Matrix, DCTLUI_CHECK_BOX, 0)
+// Written by Thatcher Freeman
+// Based on a spec sheet provided by Filmic
+
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
 __DEVICE__ inline float dot_product(float3 a, float3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
@@ -79,40 +82,36 @@ __DEVICE__ float linear_to_dwg(float x) {
     }
 }
 
-// Used values calculated from http://color.support/colorspacecalculator.html
-// Assumed Rec709 primaries (after resaturation), to DWG
-__CONSTANT__ float matrix[9] = {
-    0.562767,  0.323517,  0.113716,
-    0.077755,  0.749577,  0.172668,
-    0.064669,  0.191999,  0.743332,
-};
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
 {
-    float r = logv3_to_linear_approx(p_R);
-    float g = logv3_to_linear_approx(p_G);
-    float b = logv3_to_linear_approx(p_B);
+    float3 rgb = make_float3(logv3_to_linear_approx(p_R), logv3_to_linear_approx(p_G), logv3_to_linear_approx(p_B));
+    rgb = resaturate(rgb);
 
-    float3 resaturated = resaturate(make_float3(r, g, b));
-    r = resaturated.x;
-    g = resaturated.y;
-    b = resaturated.z;
-
-    float r2 = r;
-    float g2 = g;
-    float b2 = b;
-    if (!skip_matrix) {
-        r2 = ( matrix[0] * r) + ( matrix[1] * g) + ( matrix[2] * b);
-        g2 = ( matrix[3] * r) + ( matrix[4] * g) + ( matrix[5] * b);
-        b2 = ( matrix[6] * r) + ( matrix[7] * g) + ( matrix[8] * b);
+    // Assumed Rec709 primaries
+    float matrix[3][3] = {
+        {0.56276746, 0.32351659, 0.11371596},
+        {0.07775464, 0.74957735, 0.17266802},
+        {0.0646692 , 0.19199869, 0.74333211},
+    }
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix, rgb);
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
     }
 
-    float3 res = make_float3(r2, g2, b2);
-    if (!no_log) {
-        float r3 = linear_to_dwg(r2);
-        float g3 = linear_to_dwg(g2);
-        float b3 = linear_to_dwg(b2);
-        res = to_float3(r3, g3, b3);
+    float3 out;
+    if (output_tone_curve == DI) {
+        out = make_float3(linear_to_dwg(rgb2.x), linear_to_dwg(rgb2.y), linear_to_dwg(rgb2.z));
+    } else if (output_tone_curve == LINEAR) {
+        out = rgb2;
     }
-    return res;
+    return out;
 }

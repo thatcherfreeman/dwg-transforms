@@ -1,16 +1,16 @@
 // Written by Thatcher Freeman
-// Based on clips shot on a Panasonic GH5S.
+// Based on a clip shot on a Phantom Flex4k and decoded two ways in PCC
 
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
-__DEVICE__ float vlogl_to_linear(float x) {
-    const float base = 3151.876953125;
-    const float offset = -0.041575755923986435;
-    const float scale = 0.027831153944134712;
-    const float slope = 0.6305733323097229;
-    const float intercept = -0.044235553592443466;
-    const float cut = 0.13017937541007996;
+__DEVICE__ float phantom_log2_to_linear(float x) {
+    const float base = 521.9552001953125;
+    const float offset = .00009969412349164486;
+    const float scale = 0.00181956822052598;
+    const float slope = 0.03332506865262985;
+    const float intercept = -0.000293954013613984;
+    const float cut = 0.1716942936182022;
 
     if (x < cut) {
         return slope * x + intercept;
@@ -42,16 +42,16 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(vlogl_to_linear(p_R), vlogl_to_linear(p_G), vlogl_to_linear(p_B));
-    const float gain = 0.2305386920772;
+    float3 rgb = make_float3(phantom_log2_to_linear(p_R), phantom_log2_to_linear(p_G), phantom_log2_to_linear(p_B));
+    const float gain = 1.0;
     rgb *= gain;
 
-    // Fit from color chart images.
+    // Assumed Rec709 primaries
     float matrix[3][3] = {
-        {0.90882539, 0.17087083, -0.07969622},
-        {-0.03677060, 1.01650843, 0.02026217},
-        {0.04910049, 0.07075396, 0.88014555},
-    };
+        {0.56276746, 0.32351659, 0.11371596},
+        {0.07775464, 0.74957735, 0.17266802},
+        {0.0646692 , 0.19199869, 0.74333211},
+    }
     float3 rgb2;
     if (output_color_gamut == DWG) {
         rgb2 = mv_33_3(matrix, rgb);

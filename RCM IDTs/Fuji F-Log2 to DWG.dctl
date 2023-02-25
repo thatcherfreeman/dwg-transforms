@@ -1,5 +1,10 @@
-__DEVICE__ float flog2_to_linear(float t)
-{
+// Written by Thatcher Freeman
+// Based on the FLog2 White Paper
+
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+__DEVICE__ float flog2_to_linear(float t) {
     const float a = 5.555556f;
     const float b = 0.064829f;
     const float c = 0.245281f;
@@ -18,14 +23,13 @@ __DEVICE__ float flog2_to_linear(float t)
     return out;
 }
 
-__DEVICE__ float linear_to_dwg(float x)
-{
+__DEVICE__ float linear_to_dwg(float x) {
     const float a = 0.0075f;
     const float b = 7.0f;
     const float c = 0.07329248f;
     const float m = 10.44426855f;
     const float lin_cut = 0.00262409f;
-    const float log_cut = 0.02740668f;
+    // const float log_cut = 0.02740668f;
 
     if (x > lin_cut) {
         return (_log2f(x + a) + b) * c;
@@ -34,27 +38,34 @@ __DEVICE__ float linear_to_dwg(float x)
     }
 }
 
-// Used values calculated from http://color.support/colorspacecalculator.html
-__CONSTANT__ float matrix[9] = {
-    0.892112,  0.024369,  0.083519,
-    0.032617,  0.786138,  0.181246,
-    0.069977,  0.104749,  0.825273,
-};
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
 
-__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
-{
-    float r = flog2_to_linear(p_R);
-    float g = flog2_to_linear(p_G);
-    float b = flog2_to_linear(p_B);
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb = make_float3(flog2_to_linear(p_R), flog2_to_linear(p_G), flog2_to_linear(p_B));
 
-    float r2 = ( matrix[0] * r) + ( matrix[1] * g) + ( matrix[2] * b);
-    float g2 = ( matrix[3] * r) + ( matrix[4] * g) + ( matrix[5] * b);
-    float b2 = ( matrix[6] * r) + ( matrix[7] * g) + ( matrix[8] * b);
+    // Primaries taken from white paper.
+    float matrix[3][3] = {
+        {0.892112,  0.024369,  0.083519},
+        {0.032617,  0.786138,  0.181246},
+        {0.069977,  0.104749,  0.825273},
+    };
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix, rgb);
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
+    }
 
-    float r3 = linear_to_dwg(r2);
-    float g3 = linear_to_dwg(g2);
-    float b3 = linear_to_dwg(b2);
-
-    float3 res = make_float3(r3, g3, b3);
-    return res;
+    float3 out = make_float3(0.0, 0.0, 0.0);
+    if (output_tone_curve == DI) {
+        out = make_float3(linear_to_dwg(rgb2.x), linear_to_dwg(rgb2.y), linear_to_dwg(rgb2.z));
+    } else if (output_tone_curve == LINEAR) {
+        out = rgb2;
+    }
+    return out;
 }
