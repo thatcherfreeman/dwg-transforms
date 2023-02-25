@@ -43,7 +43,8 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float3 rgb = make_float3(phantom_log2_to_linear(p_R), phantom_log2_to_linear(p_G), phantom_log2_to_linear(p_B));
-    const float gain = 1.0;
+    // Gain estimated to match the default Rec709 decode.
+    const float gain = 3.0;
     rgb *= gain;
 
     // Assumed Rec709 primaries
@@ -51,7 +52,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         {0.56276746, 0.32351659, 0.11371596},
         {0.07775464, 0.74957735, 0.17266802},
         {0.0646692 , 0.19199869, 0.74333211},
-    }
+    };
     float3 rgb2;
     if (output_color_gamut == DWG) {
         rgb2 = mv_33_3(matrix, rgb);
