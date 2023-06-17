@@ -20,6 +20,22 @@ __DEVICE__ float zlog2_to_linear(float x) {
     }
 }
 
+__DEVICE__ float linear_to_zlog2(float x) {
+    // Inverse of zlog2 to linear
+    const float base = 883.01708984375;
+    const float offset = -0.2871415317058563;
+    const float scale = 0.09746987372636795;
+    const float slope = 2.7828056812286377;
+    const float intercept = -0.46649909019470215;
+    const float cut = 0.212049663066864;
+
+    if (x < slope * cut + intercept) {
+        return (x - intercept) / slope;
+    } else {
+        return _logf((x - offset) / scale) / _logf(base);
+    }
+}
+
 __DEVICE__ float linear_to_dwg(float x) {
     const float a = 0.0075f;
     const float b = 7.0f;
