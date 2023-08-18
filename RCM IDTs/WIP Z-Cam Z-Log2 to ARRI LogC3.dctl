@@ -48,11 +48,11 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Fit from six color charts, four on E2 and two on F6, assumed all were after-2014 macbeth charts, conversion to AWG3
     float matrix[3][3] = {
-        // Estimated primaries:
-        // [[0.70860151 0.21437267 1.        ]] [[0.28116174 1.13839124 1.        ]] [[ 0.05915039 -0.1454884   1.        ]] [[0.3127 0.329  1.    ]]
-        { 1.019859,  0.032923, -0.052782},
-        {-0.123453,  1.161502, -0.038049},
-        { 0.049637, -0.250704,  1.201067},
+        // Estimated Primaries
+        // [[0.73413734 0.17410502 1.        ]] [[0.14004892 1.219375   1.        ]] [[ 0.14315259 -0.13832228  1.        ]] [[0.3127 0.329  1.    ]]
+        { 1.06141273, -0.22457681,  0.16316407},
+        {-0.18297960,  1.30330522, -0.12032562},
+        { 0.05651992, -0.18689758,  1.13037767},
     };
     float3 rgb2;
     rgb2 = mv_33_3(matrix, rgb);

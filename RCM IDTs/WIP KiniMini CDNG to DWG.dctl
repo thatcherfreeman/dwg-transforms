@@ -1,16 +1,25 @@
 // Written by Thatcher Freeman
-// Based on clips shot by a DJI Mavic 2
+// Based on clips shot by a KiniMini 4k.
+
+// Decode the clips at a project level with the following settings:
+// "Apply Pre Tone Curve" UNCHECKED
+// "Apply Soft Clip" UNCHECKED
+// Color Science: Camera Metadata
+// White Balance: As shot
+// Color Space: Blackmagic Design
+// Gamma: Blackmagic Design Film
+// All sliders set to 0.0.
 
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
-__DEVICE__ float dlogm_to_linear(float x) {
-    const float base = 108.11405181884766;
-    const float offset = -0.025329161435365677;
-    const float scale = 0.031597670167684555;
-    const float slope = 0.3532363474369049;
-    const float intercept = -0.015529380179941654;
-    const float cut = 0.18580546975135803;
+__DEVICE__ float blackmagic_film_to_linear(float x) {
+    const float base = 213.42864990234375;
+    const float offset = -0.13013190031051636;
+    const float scale = 0.10866688936948776;
+    const float slope = 0.8058837056159973;
+    const float intercept = -0.02851923741400242;
+    const float cut = 0.06514445692300797;
 
     if (x < cut) {
         return slope * x + intercept;
@@ -42,14 +51,15 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(dlogm_to_linear(p_R), dlogm_to_linear(p_G), dlogm_to_linear(p_B));
+    float3 rgb = make_float3(blackmagic_film_to_linear(p_R), blackmagic_film_to_linear(p_G), blackmagic_film_to_linear(p_B));
 
     // Estimated xyY Primaries:
-    // rgbw: [[0.72003371 0.29384789 1.        ]] [[0.14843905 0.84472009 1.        ]] [[ 0.15243193 -0.05063941  1.        ]] [[0.3127 0.329  1.    ]]
-    float matrix[3][3] =  {
-        {0.87480846, -0.01304171,  0.13823325},
-        {0.02641990,  0.94574428,  0.02783581},
-        {0.05898542,  0.10231631,  0.83869827},
+    // Assumed Primaries: [[0.72533342 0.23229313 1.        ]] [[0.07637356 1.1886415  1.        ]] [[ 0.11865626 -0.2425359   1. ]]
+    // [[0.3127 0.329  1.    ]]
+    float matrix[3][3] = {
+        {1.06230962, -0.15662533, 0.09431571},
+        {-0.04039881, 1.22449715, -0.18409834},
+        {0.10809560, -0.05845818, 0.95036258},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
