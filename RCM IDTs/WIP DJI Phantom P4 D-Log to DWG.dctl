@@ -43,16 +43,17 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float3 rgb = make_float3(dlog_to_linear(p_R), dlog_to_linear(p_G), dlog_to_linear(p_B));
-    // Assuming code value of 0.45 corresponds to mid gray.
-    const float gain = 0.187942447846;
+    // Assuming code value of 0.50 corresponds to mid gray.
+    const float gain = 0.1365892155226;
     rgb *= gain;
 
-    // Primaries from Colorchecker Passport video chart were pretty close to Rec709,
-    // so I'm assuming rec709 primaries.
+    // Primaries estimated from shot of a colorchecker classic and colorchecker passport video:
+    // [[0.76289338 0.29078454 1.        ]] [[0.24209717 0.64363294 1.        ]] [[ 0.13156262 -0.03606133  1.        ]] [[0.3127 0.329  1.
+    // ]]
     float matrix[3][3] = {
-        {0.562767, 0.323517, 0.113716},
-        {0.077755, 0.749577, 0.172668},
-        {0.064669, 0.191999, 0.743332},
+        {6.93345513e-01, 2.24162544e-01, 8.24919437e-02},
+        {-1.11987039e-04, 9.44347609e-01, 5.57643779e-02},
+        {2.58222398e-02, 2.29106607e-01, 7.45071154e-01},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
