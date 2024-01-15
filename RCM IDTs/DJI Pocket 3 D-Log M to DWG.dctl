@@ -51,16 +51,16 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(
-            pocket_3_dlogm_to_linear(p_R), pocket_3_dlogm_to_linear(p_G), pocket_3_dlogm_to_linear(p_B));
+    float3 rgb = make_float3(pocket_3_dlogm_to_linear(p_R), pocket_3_dlogm_to_linear(p_G), pocket_3_dlogm_to_linear(p_B));
 
     // Estimated xyY RGBW Primaries:
-    // Based on a really old macbeth chart.
-    // rgbw: [[0.81773127 0.26382216 1.        ]] [[0.25935611 0.64307725 1.        ]] [[ 0.09118328 -0.19119445  1.        ]] [[0.3127 0.329  1.    ]]
-    float matrix [3][3] = {
-        { 0.65793735,  0.31495034,  0.02711231},
-        {-0.03590662,  1.11540165, -0.07949503},
-        { 0.01101807,  0.2565521 ,  0.73242982},
+    // fitted to a new colorchecker mini
+    // rgbw:  [[0.71267977 0.29011508 1.        ]] [[0.22925987 0.68106348 1.        ]] [[ 0.15911944 -0.02917216  1.        ]] [[0.3127
+    // 0.329  1.    ]]
+    float matrix[3][3] = {
+        {0.6880306, 0.17473846, 0.13723094},
+        {0.02149547, 0.9315026, 0.04700193},
+        {0.05213756, 0.19266248, 0.75519996},
     };
 
     float3 rgb2;
