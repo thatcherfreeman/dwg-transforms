@@ -1,0 +1,80 @@
+// Written by Thatcher Freeman
+
+__DEVICE__ inline void copy_matrix(float src[3][3], float dst[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            dst[i][j] = src[i][j];
+        }
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+// E-Gamut Primaries:
+//     [0.8000, 0.3177],
+//     [0.1800, 0.9000],
+//     [0.0650, -0.0805],
+// White is D65
+
+__DEVICE__ float tlog_to_linear(float t) {
+    const float w = 128.0;
+    const float g = 16.0;
+    const float o = 0.075;
+
+    float b = 1 / (0.7107 + 1.2359 * _logf(w * g));
+    float gs = g / (1 - o);
+    float C = b / gs;
+    float a = 1 - b * _logf(w + C);
+    float y0 = a + b * _logf(C);
+    float s = (1 - o) / (1 - y0);
+    float A = 1 + (a - 1) * s;
+    float B = b * s;
+    float G = gs * s;
+
+    float x;
+    if (t < o) {
+        x = (t - o) / G;
+    } else {
+        x = _expf((t - A) / B) - C;
+    }
+    return x;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 input_color = make_float3(p_R, p_G, p_B);
+    float3 out = input_color;
+
+    out.x = tlog_to_linear(out.x);
+    out.y = tlog_to_linear(out.y);
+    out.z = tlog_to_linear(out.z);
+    float egamut_to_dwg[3][3] = {
+        {1.006257, 0.028641, -0.034899},
+        {0.004461, 0.937410, 0.058128},
+        {-0.002703, 0.044642, 0.958061},
+    };
+    out = mv_33_3(egamut_to_dwg, out);
+    out.x = linear_to_di(out.x);
+    out.y = linear_to_di(out.y);
+    out.z = linear_to_di(out.z);
+    return out;
+}
