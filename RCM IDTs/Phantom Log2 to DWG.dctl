@@ -1,8 +1,10 @@
 // Written by Thatcher Freeman
 // Based on a clip shot on a Phantom Flex4k and decoded two ways in PCC
-
+// clang-format off
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
 
 __DEVICE__ float phantom_log2_to_linear(float x) {
     const float base = 521.9552001953125;

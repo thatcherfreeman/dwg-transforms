@@ -1,5 +1,8 @@
+// clang-format off
 DEFINE_UI_PARAMS(desat, Desaturate, DCTLUI_CHECK_BOX, 1)
 DEFINE_UI_PARAMS(resat, Resaturate, DCTLUI_CHECK_BOX, 1)
+
+// clang-format on
 
 __DEVICE__ inline float dot_product(float3 a, float3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;

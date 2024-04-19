@@ -1,10 +1,11 @@
 // Written by Thatcher Freeman
 // Based on clips shot on a GoPro Hero 7.
-
+// clang-format off
 DEFINE_UI_PARAMS(color_profile_input, Profile, DCTLUI_COMBO_BOX, 0, {FLAT, COLOR}, {GoPro Flat Profile, GoPro Color Profile})
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
+// clang-format on
 __DEVICE__ float protune_to_linear(float t) {
     // Protune function taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
     return (_powf(113.0, t) - 1.0) / 112.0;

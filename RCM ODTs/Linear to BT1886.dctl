@@ -1,13 +1,11 @@
+// clang-format off
 DEFINE_UI_PARAMS(lw, Screen Luminance White, DCTLUI_VALUE_BOX, 100.0)
 DEFINE_UI_PARAMS(lb, Screen Luminance Black, DCTLUI_VALUE_BOX, 0.1)
 DEFINE_UI_PARAMS(gamma, Gamma Value, DCTLUI_VALUE_BOX, 2.4)
 DEFINE_UI_PARAMS(appx1_b, Appendix1 Brightness Value, DCTLUI_VALUE_BOX, 0.0)
-DEFINE_UI_PARAMS(direction,
-                 Direction,
-                 DCTLUI_COMBO_BOX,
-                 1,
-                 {ANN1_EOTF, ANN1_EOTF_INV, APP1_EOTF, APP1_EOTF_INV, OETF, OETF_INV, NONE},
-                 {Annex1 EOTF, Annex1 EOTF Inverse, Appx1 EOTF, Appx1 EOTF Inverse, OETF, OETF Inv, None})
+DEFINE_UI_PARAMS(direction, Direction, DCTLUI_COMBO_BOX, 1, {ANN1_EOTF, ANN1_EOTF_INV, APP1_EOTF, APP1_EOTF_INV, OETF, OETF_INV, NONE}, {Annex1 EOTF, Annex1 EOTF Inverse, Appx1 EOTF, Appx1 EOTF Inverse, OETF, OETF Inv, None})
+
+// clang-format on
 
 __DEVICE__ float annex_1_eotf(float v, float lw, float lb, float gamma) {
     const float a = _powf(_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma), gamma);

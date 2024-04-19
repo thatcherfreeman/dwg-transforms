@@ -10,8 +10,11 @@
 // Gamma: Blackmagic Design Film
 // All sliders set to 0.0.
 
+// clang-format off
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
 
 __DEVICE__ float blackmagic_film_to_linear(float x) {
     const float base = 213.42864990234375;

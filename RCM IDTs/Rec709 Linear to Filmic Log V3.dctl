@@ -1,5 +1,8 @@
+// clang-format off
 DEFINE_UI_PARAMS(no_log, Skip Log Encoding, DCTLUI_CHECK_BOX, 0)
 DEFINE_UI_PARAMS(skip_desat, Skip Desaturation, DCTLUI_CHECK_BOX, 0)
+
+// clang-format on
 
 __DEVICE__ float linear_to_logv3(float invec) {
     float l = (_log2f(invec) + 8.0) * 0.125;

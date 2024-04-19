@@ -1,8 +1,10 @@
 // Written by Thatcher Freeman
 // Based on the FLog2 White Paper
-
+// clang-format off
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
 
 __DEVICE__ float flog2_to_linear(float t) {
     const float a = 5.555556f;
