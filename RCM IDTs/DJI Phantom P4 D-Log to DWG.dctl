@@ -5,18 +5,20 @@ DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
 __DEVICE__ float dlog_to_linear(float x) {
-    const float base = 949.411865234375;
-    const float offset = 0.07708270847797394;
-    const float scale = 0.040267255157232285;
-    const float slope = 1.7818266153335571;
-    const float intercept = -0.14765501022338867;
-    const float cut = 0.2706452012062073;
+    const float base = 1001.4365844726562;
+    const float offset = 1.395376443862915;
+    const float scale = 0.6393237709999084;
+    const float slope = 29.36385154724121;
+    const float intercept = -2.405184268951416;
+    const float cut = 0.2740863561630249;
 
+    float out;
     if (x < cut) {
-        return slope * x + intercept;
+        out = slope * x + intercept;
     } else {
-        return _powf(base, x) * scale + offset;
+        out = _powf(base, x) * scale + offset;
     }
+    return out;
 }
 
 __DEVICE__ float linear_to_dwg(float x) {
@@ -44,16 +46,15 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float3 rgb = make_float3(dlog_to_linear(p_R), dlog_to_linear(p_G), dlog_to_linear(p_B));
     // Assuming code value of 0.50 corresponds to mid gray.
-    const float gain = 0.1365892155226;
+    const float gain = 0.18 / 21.62708;
     rgb *= gain;
 
     // Primaries estimated from shot of a colorchecker classic and colorchecker passport video:
-    // [[0.76289338 0.29078454 1.        ]] [[0.24209717 0.64363294 1.        ]] [[ 0.13156262 -0.03606133  1.        ]] [[0.3127 0.329  1.
-    // ]]
+    // [[0.74631119 0.29742087 1.        ]] [[0.24726439 0.62688006 1.        ]] [[ 0.12542201 -0.04435665  1.        ]] [[0.3127 0.329  1.    ]]
     float matrix[3][3] = {
-        {6.93345513e-01, 2.24162544e-01, 8.24919437e-02},
-        {-1.11987039e-04, 9.44347609e-01, 5.57643779e-02},
-        {2.58222398e-02, 2.29106607e-01, 7.45071154e-01},
+        {0.68548224, 0.24483911, 0.06967865},
+        {0.01142579, 0.94028723, 0.04828699},
+        {0.03091288, 0.24512543, 0.7239617 },
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
