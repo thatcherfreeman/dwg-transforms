@@ -50,11 +50,12 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     rgb *= gain;
 
     // Primaries estimated from shot of a colorchecker classic and colorchecker passport video:
-    // [[0.74631119 0.29742087 1.        ]] [[0.24726439 0.62688006 1.        ]] [[ 0.12542201 -0.04435665  1.        ]] [[0.3127 0.329  1.    ]]
+    // [[0.74631119 0.29742087 1.        ]] [[0.24726439 0.62688006 1.        ]] [[ 0.12542201 -0.04435665  1.        ]] [[0.3127 0.329  1.
+    // ]]
     float matrix[3][3] = {
         {0.68548224, 0.24483911, 0.06967865},
         {0.01142579, 0.94028723, 0.04828699},
-        {0.03091288, 0.24512543, 0.7239617 },
+        {0.03091288, 0.24512543, 0.7239617},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {

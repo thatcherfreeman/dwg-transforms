@@ -54,13 +54,13 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(
-            mavic_3_pro_dlogm_to_linear(p_R), mavic_3_pro_dlogm_to_linear(p_G), mavic_3_pro_dlogm_to_linear(p_B));
+    float3 rgb = make_float3(mavic_3_pro_dlogm_to_linear(p_R), mavic_3_pro_dlogm_to_linear(p_G), mavic_3_pro_dlogm_to_linear(p_B));
 
     // Estimated xyY RGBW Primaries:
     // Honestly not far from rec709
-    // rgbw: [[0.69644137 0.30997671 1.        ]] [[0.25352098 0.6715864  1.        ]] [[0.18932426 0.05379236 1.        ]] [[0.3127 0.329  1.    ]]
-    float matrix [3][3] = {
+    // rgbw: [[0.69644137 0.30997671 1.        ]] [[0.25352098 0.6715864  1.        ]] [[0.18932426 0.05379236 1.        ]] [[0.3127
+    // 0.329  1.    ]]
+    float matrix[3][3] = {
         {0.58153814, 0.20390556, 0.21455631},
         {0.03777275, 0.81320261, 0.14902464},
         {0.04443076, 0.16222857, 0.79334067},

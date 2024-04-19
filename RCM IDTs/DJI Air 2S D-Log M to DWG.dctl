@@ -57,12 +57,12 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float3 rgb = make_float3(dji_air_2s_dlogm_to_linear(p_R), dji_air_2s_dlogm_to_linear(p_G), dji_air_2s_dlogm_to_linear(p_B));
 
     // Estimated xyY RGBW Primaries:
-    // RGBW: [[0.76129243 0.33469502 1.        ]] [[0.18291758 0.76306448 1.        ]] [[ 0.12775767 -0.06484718  1.        ]] [[0.3127 0.329  1.    ]]
-    // Based on colorchecker shot in daylight
+    // RGBW: [[0.76129243 0.33469502 1.        ]] [[0.18291758 0.76306448 1.        ]] [[ 0.12775767 -0.06484718  1.        ]] [[0.3127
+    // 0.329  1.    ]] Based on colorchecker shot in daylight
     float matrix[3][3] = {
-        {0.8540371,  0.05811304, 0.08784986},
+        {0.8540371, 0.05811304, 0.08784986},
         {0.03824643, 0.93416416, 0.02758941},
-        {0.0101824,  0.1447715,  0.84504611},
+        {0.0101824, 0.1447715, 0.84504611},
     };
 
     float3 rgb2;

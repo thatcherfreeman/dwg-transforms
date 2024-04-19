@@ -51,7 +51,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float matrix[3][3] = {
         {0.56276746, 0.32351659, 0.11371596},
         {0.07775464, 0.74957735, 0.17266802},
-        {0.0646692 , 0.19199869, 0.74333211},
+        {0.0646692, 0.19199869, 0.74333211},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {

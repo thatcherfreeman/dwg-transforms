@@ -23,20 +23,14 @@ __DEVICE__ float linear_to_dwg(float x) {
 }
 
 __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
-    float3 out = make_float3(
-        mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
-        mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
-        mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z
-    );
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
     return out;
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(
-        protune_to_linear(p_R),
-        protune_to_linear(p_G),
-        protune_to_linear(p_B)
-    );
+    float3 rgb = make_float3(protune_to_linear(p_R), protune_to_linear(p_G), protune_to_linear(p_B));
 
     if (color_profile_input == COLOR) {
         // Convert to flat profile via a gamma adjustment
@@ -55,17 +49,13 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // Used values calculated from http://color.support/colorspacecalculator.html
     // Native color primaries taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
     float matrix[3][3] = {
-        { 0.711228,  0.234219,  0.054553},
-        {-0.046155,  0.948576,  0.097580},
-        { 0.107143, -0.121310,  1.014166},
+        {0.711228, 0.234219, 0.054553},
+        {-0.046155, 0.948576, 0.097580},
+        {0.107143, -0.121310, 1.014166},
     };
 
     float3 rgb2 = mv_33_3(matrix, rgb);
 
-    float3 res = make_float3(
-        linear_to_dwg(rgb2.x),
-        linear_to_dwg(rgb2.y),
-        linear_to_dwg(rgb2.z)
-    );
+    float3 res = make_float3(linear_to_dwg(rgb2.x), linear_to_dwg(rgb2.y), linear_to_dwg(rgb2.z));
     return res;
 }

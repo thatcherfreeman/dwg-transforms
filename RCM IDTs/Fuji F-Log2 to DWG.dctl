@@ -50,9 +50,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Primaries taken from white paper.
     float matrix[3][3] = {
-        {0.892112,  0.024369,  0.083519},
-        {0.032617,  0.786138,  0.181246},
-        {0.069977,  0.104749,  0.825273},
+        {0.892112, 0.024369, 0.083519},
+        {0.032617, 0.786138, 0.181246},
+        {0.069977, 0.104749, 0.825273},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {

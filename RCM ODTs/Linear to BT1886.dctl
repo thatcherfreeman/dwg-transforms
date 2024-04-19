@@ -2,20 +2,24 @@ DEFINE_UI_PARAMS(lw, Screen Luminance White, DCTLUI_VALUE_BOX, 100.0)
 DEFINE_UI_PARAMS(lb, Screen Luminance Black, DCTLUI_VALUE_BOX, 0.1)
 DEFINE_UI_PARAMS(gamma, Gamma Value, DCTLUI_VALUE_BOX, 2.4)
 DEFINE_UI_PARAMS(appx1_b, Appendix1 Brightness Value, DCTLUI_VALUE_BOX, 0.0)
-DEFINE_UI_PARAMS(direction, Direction, DCTLUI_COMBO_BOX, 1, { ANN1_EOTF, ANN1_EOTF_INV, APP1_EOTF, APP1_EOTF_INV, OETF, OETF_INV, NONE }, { Annex1 EOTF, Annex1 EOTF Inverse, Appx1 EOTF, Appx1 EOTF Inverse, OETF, OETF Inv, None})
-
+DEFINE_UI_PARAMS(direction,
+                 Direction,
+                 DCTLUI_COMBO_BOX,
+                 1,
+                 {ANN1_EOTF, ANN1_EOTF_INV, APP1_EOTF, APP1_EOTF_INV, OETF, OETF_INV, NONE},
+                 {Annex1 EOTF, Annex1 EOTF Inverse, Appx1 EOTF, Appx1 EOTF Inverse, OETF, OETF Inv, None})
 
 __DEVICE__ float annex_1_eotf(float v, float lw, float lb, float gamma) {
-    const float a = _powf(_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma), gamma);
-    const float b = _powf(lb, 1.0/gamma) / (_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma));
+    const float a = _powf(_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma), gamma);
+    const float b = _powf(lb, 1.0 / gamma) / (_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma));
     float l = a * _powf(_fmaxf(v + b, 0.0), gamma);
     // Not in the eotf spec, but scaling by lw so that the result is in the 0-1 range.
     return l / lw;
 }
 
 __DEVICE__ float annex_1_eotf_inv(float l, float lw, float lb, float gamma) {
-    const float a = _powf(_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma), gamma);
-    const float b = _powf(lb, 1.0/gamma) / (_powf(lw, 1.0/gamma) - _powf(lb, 1.0/gamma));
+    const float a = _powf(_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma), gamma);
+    const float b = _powf(lb, 1.0 / gamma) / (_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma));
     float v = _powf(l * lw / a, 1.0 / gamma) - b;
     return v;
 }
@@ -47,11 +51,10 @@ __DEVICE__ float appx_1_eotf_inv(float l, float lw, float appx1_b) {
     if (l * lw < cutoff) {
         v = _powf(l * lw / (k * _powf(vc + b, a1 - a2)), 1.0 / a2) - b;
     } else {
-        v = _powf(l * lw / k, 1.0/a1) - b;
+        v = _powf(l * lw / k, 1.0 / a1) - b;
     }
     return v;
 }
-
 
 __DEVICE__ float oetf(float l) {
     float v;
@@ -66,15 +69,14 @@ __DEVICE__ float oetf(float l) {
 __DEVICE__ float inv_oetf(float v) {
     float l;
     if (v > 0.018 * 4.500) {
-        l = _powf(((v + 0.099) / 1.099), 1.0/0.45);
+        l = _powf(((v + 0.099) / 1.099), 1.0 / 0.45);
     } else {
         l = v / 4.500;
     }
     return l;
 }
 
-__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
-{
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
 
     float3 output = make_float3(p_R, p_G, p_B);
 

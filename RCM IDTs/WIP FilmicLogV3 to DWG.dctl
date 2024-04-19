@@ -18,14 +18,9 @@ __DEVICE__ float unmixf(float b, float c, float t) {
 }
 
 __DEVICE__ inline float3 unmixf3(float3 b, float3 c, float t) {
-    float3 output = make_float3(
-        unmixf(b.x, c.x, t),
-        unmixf(b.y, c.y, t),
-        unmixf(b.z, c.z, t)
-    );
+    float3 output = make_float3(unmixf(b.x, c.x, t), unmixf(b.y, c.y, t), unmixf(b.z, c.z, t));
     return output;
 }
-
 
 __DEVICE__ float logv3_to_linear(float invec) {
     // This function is based on the official documentation but it
@@ -49,8 +44,8 @@ __DEVICE__ float logv3_to_linear_approx(float y) {
     const float gamma = 0.27698768;
     const float log_cutoff = 0.55;
     const float smoothing = 0.05;
-    float exp_portion = _exp2f(((y * 9.0/8.0) - 1.0) * 8.0);
-    float pow_portion = _powf(y, 1.0/gamma);
+    float exp_portion = _exp2f(((y * 9.0 / 8.0) - 1.0) * 8.0);
+    float pow_portion = _powf(y, 1.0 / gamma);
     // Interpolate because the two pieces don't quite meet at a single point.
     float interp = interpolate(y, log_cutoff - smoothing, log_cutoff + smoothing);
     float output = pow_portion * interp + (1.0 - interp) * exp_portion;
@@ -89,8 +84,7 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
     return out;
 }
 
-__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
-{
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float3 rgb = make_float3(logv3_to_linear_approx(p_R), logv3_to_linear_approx(p_G), logv3_to_linear_approx(p_B));
     rgb = resaturate(rgb);
 
@@ -98,7 +92,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float matrix[3][3] = {
         {0.56276746, 0.32351659, 0.11371596},
         {0.07775464, 0.74957735, 0.17266802},
-        {0.0646692 , 0.19199869, 0.74333211},
+        {0.0646692, 0.19199869, 0.74333211},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
