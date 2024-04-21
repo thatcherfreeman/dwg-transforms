@@ -15,7 +15,7 @@ __DEVICE__ inline void copy_matrix(float src[3][3], float dst[3][3]) {
     }
 }
 
-__DEVICE__ float kinelog_to_linear(float x) {
+__DEVICE__ float terra_4k_kinelog_to_linear(float x) {
     const float base = 3607.57568359375;
     const float offset = -0.015968460589647293;
     const float scale = 0.007402670104056597;
@@ -53,7 +53,7 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(kinelog_to_linear(p_R), kinelog_to_linear(p_G), kinelog_to_linear(p_B));
+    float3 rgb = make_float3(terra_4k_kinelog_to_linear(p_R), terra_4k_kinelog_to_linear(p_G), terra_4k_kinelog_to_linear(p_B));
 
     // Estimated from colorchecker 24 in daylight.
     // Estimated xyY RGBW primaries:
