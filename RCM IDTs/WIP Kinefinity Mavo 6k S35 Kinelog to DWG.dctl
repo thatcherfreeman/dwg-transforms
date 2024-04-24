@@ -7,13 +7,6 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 // clang-format on
 
-__DEVICE__ inline void copy_matrix(float src[3][3], float dst[3][3]) {
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            dst[i][j] = src[i][j];
-        }
-    }
-}
 
 __DEVICE__ float mavo_6k_s35_kinelog_to_linear(float x) {
     const float base = 4642.83837890625;

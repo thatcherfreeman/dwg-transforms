@@ -5,14 +5,6 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 // clang-format on
 
-__DEVICE__ inline void copy_matrix(float src[3][3], float dst[3][3]) {
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            dst[i][j] = src[i][j];
-        }
-    }
-}
-
 __DEVICE__ float dji_air_2s_dlogm_to_linear(float x) {
     // Based on clips shot on Air 2S in D-LogM
     // Maps 60% IRE input to mid gray.
