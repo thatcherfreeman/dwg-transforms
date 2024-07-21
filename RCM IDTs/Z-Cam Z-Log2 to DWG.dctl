@@ -1,6 +1,7 @@
 // Written by Thatcher Freeman
 // Based on clips shot on a Z-Cam E2 F6 and an E2 OG.
 // clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {IN_ZLOG2, IN_LINEAR}, {Z-Log2, Linear})
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
@@ -61,10 +62,15 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(zlog2_to_linear(p_R), zlog2_to_linear(p_G), zlog2_to_linear(p_B));
-    // Gain needed to set 45 IRE in zlog2 to 0.18 after the fitted curve.
-    const float gain = 0.1013439;
-    rgb *= gain;
+    float3 rgb;
+    if (input_tone_curve == IN_ZLOG2) {
+        rgb = make_float3(zlog2_to_linear(p_R), zlog2_to_linear(p_G), zlog2_to_linear(p_B));
+        // Gain needed to set 45 IRE in zlog2 to 0.18 after the fitted curve.
+        const float gain = 0.1013439;
+        rgb *= gain;
+    } else {
+        rgb = make_float3(p_R, p_G, p_B);
+    }
 
     // Fit from six color charts, four on E2 and two on F6, assumed all were after-2014 macbeth charts.
     float matrix[3][3] = {
