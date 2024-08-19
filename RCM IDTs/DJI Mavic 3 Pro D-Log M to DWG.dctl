@@ -5,7 +5,6 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 // clang-format on
 
-
 __DEVICE__ float mavic_3_pro_dlogm_to_linear(float x) {
     // Based on clips shot on Mavic 3 Pro, wide lens in D-Log M
     // Maps 40% IRE to 18% gray.

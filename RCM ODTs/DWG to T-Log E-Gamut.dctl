@@ -1,6 +1,5 @@
 // Written by Thatcher Freeman
 
-
 __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
     float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
                              mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,

@@ -7,7 +7,6 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 // clang-format on
 
-
 __DEVICE__ float mavo_6k_s35_kinelog_to_linear(float x) {
     const float base = 4642.83837890625;
     const float offset = -0.033478993922472;
@@ -23,7 +22,7 @@ __DEVICE__ float mavo_6k_s35_kinelog_to_linear(float x) {
         out = _powf(base, x) * scale + offset;
     }
     // Map 40% ire input to mid gray.
-    out *= 0.18/0.4058;
+    out *= 0.18 / 0.4058;
     return out;
 }
 
@@ -54,11 +53,12 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Estimated from colorchecker 24 in daylight and in tungsten.
     // Estimated xyY RGBW primaries:
-    // [[0.70946098 0.11191924 1.        ]] [[0.19515352 1.49221836 1.        ]] [[ 0.16335023 -0.09350729  1.        ]] [[0.3127 0.329  1.    ]]
+    // [[0.70946098 0.11191924 1.        ]] [[0.19515352 1.49221836 1.        ]] [[ 0.16335023 -0.09350729  1.        ]] [[0.3127 0.329  1.
+    // ]]
     float matrix[3][3] = {
-        { 0.80447122, -0.01628989,  0.21181867},
-        {-0.12525636,  1.17196451, -0.04670815},
-        { 0.15344664, -0.24611529,  1.09266865},
+        {0.80447122, -0.01628989, 0.21181867},
+        {-0.12525636, 1.17196451, -0.04670815},
+        {0.15344664, -0.24611529, 1.09266865},
     };
 
     float3 rgb2;

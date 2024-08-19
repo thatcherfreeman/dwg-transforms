@@ -54,7 +54,8 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float3 rgb = make_float3(mini_4_pro_dlogm_to_linear(p_R), mini_4_pro_dlogm_to_linear(p_G), mini_4_pro_dlogm_to_linear(p_B));
 
     // Estimated xyY RGBW Primaries:
-    // [[0.75140627 0.2764833  1.        ]] [[0.23449975 0.69717594 1.        ]] [[ 0.16272975 -0.01574311  1.        ]] [[0.3127 0.329  1.    ]]
+    // [[0.75140627 0.2764833  1.        ]] [[0.23449975 0.69717594 1.        ]] [[ 0.16272975 -0.01574311  1.        ]] [[0.3127 0.329  1.
+    // ]]
     float matrix[3][3] = {
         {0.66774353, 0.18119892, 0.15105755},
         {-0.00515027, 0.94056197, 0.06458829},

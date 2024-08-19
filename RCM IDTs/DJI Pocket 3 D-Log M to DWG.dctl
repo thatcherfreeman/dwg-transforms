@@ -6,7 +6,6 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 // clang-format on
 
-
 __DEVICE__ float pocket_3_dlogm_to_linear(float x) {
     // Based on clips shot on DJI Pocket 3 in D-Log M
 
