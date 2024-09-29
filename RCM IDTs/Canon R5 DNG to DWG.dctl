@@ -1,0 +1,98 @@
+
+// Written by Thatcher Freeman
+// Matrices based on dpreview studio test clip and exif metadata
+// clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_BMD, INPUT_LINEAR}, {Blackmagic Design Film Gen 1, Linear})
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_DI, OUTPUT_LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+DEFINE_UI_PARAMS(output_color_matrix, Output Color Matrix, DCTLUI_COMBO_BOX, 0, {MAT_EXIF, MAT_CUSTOM}, {Exif, Custom Fit})
+
+// clang-format on
+
+__DEVICE__ float bmd_film_gen1_to_linear(float x) {
+    const float base = 213.34161376953125;
+    const float offset = -0.03261885792016983;
+    const float scale = 0.02718326821923256;
+    const float slope = 0.202262744307518;
+    const float intercept = -0.007150754798203707;
+    const float cut = 0.07468625158071518;
+    const float mid_gray_scaling = 1.0;
+
+    float out;
+    if (x < cut) {
+        out = slope * x + intercept;
+    } else {
+        out = _powf(base, x) * scale + offset;
+    }
+    out *= mid_gray_scaling;
+    return out;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float matrix_custom[3][3] = {
+        // Derived from the colorchecker24 on the dpreview studio test shot, assuming that the chart is post-2014
+        {1.08006387, -0.35443863, 0.27437477},
+        {-0.0330434, 1.29174209, -0.25869869},
+        {0.13807086, -0.1167179, 0.97864704},
+    };
+
+    float matrix_exif[3][3] = {
+        // Derived from the exif metadata tags of the dpreview studio test shot, so basically this matrix is what would be recommended by
+        // adobe.
+        {0.73362542908103, 0.17528911656969, 0.010726298826836},
+        {-0.01070639185591, 1.0417250196093, -0.11137778327584},
+        {0.050723154145478, -0.039404631860825, 0.90832232219291},
+    };
+
+    // Linearize input
+    float3 rgb;
+    if (input_tone_curve == INPUT_BMD) {
+        rgb = make_float3(bmd_film_gen1_to_linear(p_R), bmd_film_gen1_to_linear(p_G), bmd_film_gen1_to_linear(p_B));
+    } else if (input_tone_curve == INPUT_LINEAR) {
+        rgb = make_float3(p_R, p_G, p_B);
+    }
+
+    // Apply matrix
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        if (output_color_matrix == MAT_CUSTOM) {
+            rgb2 = mv_33_3(matrix_custom, rgb);
+        } else if (output_color_matrix == MAT_EXIF) {
+            rgb2 = mv_33_3(matrix_exif, rgb);
+            rgb2 *= 1.0 / 0.918;
+        }
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
+    }
+
+    // Log encode output, if needed
+    float3 out = make_float3(0.0, 0.0, 0.0);
+    if (output_tone_curve == OUTPUT_DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == OUTPUT_LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
