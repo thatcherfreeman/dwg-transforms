@@ -10,12 +10,12 @@ DEFINE_UI_PARAMS(output_color_matrix, Output Color Matrix, DCTLUI_COMBO_BOX, 0, 
 // clang-format on
 
 __DEVICE__ float bmd_film_gen1_to_linear(float x) {
-    const float base = 213.34161376953125;
-    const float offset = -0.03261885792016983;
-    const float scale = 0.02718326821923256;
-    const float slope = 0.202262744307518;
-    const float intercept = -0.007150754798203707;
-    const float cut = 0.07468625158071518;
+    const float base = 213.49122619628906;
+    const float offset = -0.03251856192946434;
+    const float scale = 0.0271604023873806;
+    const float slope = 0.2012624889612198;
+    const float intercept = -0.007122418377548456;
+    const float cut = 0.061324626207351685;
     const float mid_gray_scaling = 1.0;
 
     float out;
