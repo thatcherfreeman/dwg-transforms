@@ -26,7 +26,7 @@ __DEVICE__ float mavic_3_pro_dlogm_to_linear(float x) {
     return out;
 }
 
-__DEVICE__ float linear_to_dwg(float x) {
+__DEVICE__ float linear_to_di(float x) {
     const float a = 0.0075f;
     const float b = 7.0f;
     const float c = 0.07329248f;
@@ -70,7 +70,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     float3 out = make_float3(0.0, 0.0, 0.0);
     if (output_tone_curve == DI) {
-        out = make_float3(linear_to_dwg(rgb2.x), linear_to_dwg(rgb2.y), linear_to_dwg(rgb2.z));
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {
         out = rgb2;
     }
