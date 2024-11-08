@@ -1,0 +1,199 @@
+// Written by Thatcher Freeman
+// clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(input_color_gamut, Input Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, XYZ}, {DaVinci Wide Gamut, XYZ})
+DEFINE_UI_PARAMS(scale_chroma_to_05, Scale Chroma to 0.5, DCTLUI_CHECK_BOX, 0)
+
+// clang-format on
+
+__DEVICE__ float powf(float base, float exp) {
+    return _copysignf(_powf(_fabs(base), exp), base);
+}
+
+__DEVICE__ float dot_product(float3 a, float3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+__DEVICE__ float st2084_to_linear(float x) {
+    // x is code value 0-1, outputs linear light with 1.0 = 100 nits.
+    const float m1 = 1305.0 / 8192.0;
+    const float m2 = 2523.0 / 32.0;
+    const float c1 = 3424.0 / 4096.0;
+    const float c2 = 2413.0 / 128.0;
+    const float c3 = 2392.0 / 128.0;
+
+    float out_lin = 100.0 * powf(_fmaxf(powf(x, 1.0 / m2) - c1, 0.0) / (c2 - (c3 * powf(x, 1.0 / m2))), 1.0 / m1);
+
+    // Gain 10 nits to mid gray.
+    return out_lin;
+}
+
+__DEVICE__ float linear_to_st2084(float y) {
+    // Gain mid gray to 10 nits.
+    float x = y / 100.0;
+
+    // x is code value 0-1, y is linear light with 1.0 = 100 nits.
+    const float m1 = 1305.0 / 8192.0;
+    const float m2 = 2523.0 / 32.0;
+    const float c1 = 3424.0 / 4096.0;
+    const float c2 = 2413.0 / 128.0;
+    const float c3 = 2392.0 / 128.0;
+
+    return powf((c1 + c2 * powf(x, m1)) / (1.0 + c3 * powf(x, m1)), m2);
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float di_to_linear(float t) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    // const float lin_cut = 0.00262409f; // Should be equal to ((cut2 - f) / e)
+    const float log_cut = 0.02740668f; // should be equal to (e * cut1 + f)
+
+    if (t > log_cut) {
+        return _exp2f((t / c) - b) - a;
+    } else {
+        return t / m;
+    }
+}
+
+__DEVICE__ void copy_mat_33(float to[3][3], float from[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            to[i][j] = from[i][j];
+        }
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ void mm_33_33(float dest[3][3], float a[3][3], float b[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            dest[i][j] = dot_product(make_float3(a[i][0], a[i][1], a[i][2]), make_float3(b[0][j], b[1][j], b[2][j]));
+        }
+    }
+}
+
+__DEVICE__ void element_wise_multiplication(float dest[3][3], float a[3][3], float b[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            dest[i][j] = a[i][j] * b[i][j];
+        }
+    }
+}
+
+__DEVICE__ void mat_inverse_33(float m[3][3], float inv_buf[3][3]) {
+    // from https://ardoris.wordpress.com/2008/07/18/general-formula-for-the-inverse-of-a-3x3-matrix/
+
+    float det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+                m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+
+    inv_buf[0][0] = (m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det;
+    inv_buf[0][1] = (m[0][2] * m[2][1] - m[0][1] * m[2][2]) / det;
+    inv_buf[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det;
+    inv_buf[1][0] = (m[1][2] * m[2][0] - m[1][0] * m[2][2]) / det;
+    inv_buf[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det;
+    inv_buf[1][2] = (m[0][2] * m[1][0] - m[0][0] * m[1][2]) / det;
+    inv_buf[2][0] = (m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det;
+    inv_buf[2][1] = (m[0][1] * m[2][0] - m[0][0] * m[2][1]) / det;
+    inv_buf[2][2] = (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det;
+}
+
+__DEVICE__ void make_rotation_matrix_yz(float dest[3][3], float angle_rad) {
+    dest[0][0] = 1.0;
+    dest[0][1] = 0.0;
+    dest[0][2] = 0.0;
+    dest[1][0] = 0.0;
+    dest[1][1] = _cosf(angle_rad);
+    dest[1][2] = -1.0 * _sinf(angle_rad);
+    dest[2][0] = 0.0;
+    dest[2][1] = _sinf(angle_rad);
+    dest[2][2] = _cosf(angle_rad);
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float dwg_to_xyz[3][3] = {
+        {0.700622392093671, 0.148774815123197, 0.101058719834803},
+        {0.274118510906649, 0.873631895940437, -0.147750406847086},
+        {-0.098962912883231, -0.137895325075543, 1.325915988718652},
+    };
+    float xyz_to_lms_hpe[3][3] = {
+        {0.4002, 0.7076, -0.0808},
+        {-0.2263, 1.1653, 0.0457},
+        {0, 0, 0.9182},
+    };
+    const float crosstalk = 0.04;
+    float crosstalk_matrix[3][3] = {
+        {1.0 - 2.0 * crosstalk, crosstalk, crosstalk},
+        {crosstalk, 1.0 - 2.0 * crosstalk, crosstalk},
+        {crosstalk, crosstalk, 1.0 - 2.0 * crosstalk},
+    };
+    const float angle = 1.134464; // documentation says this number of radians aligns with skintones.
+    float rotation_matrix[3][3];
+    make_rotation_matrix_yz(rotation_matrix, angle);
+    float scalar_mat[3][3] = {
+        {1.0, 1.0, 1.0},
+        {1.4, 1.4, 1.4},
+        {1.0, 1.0, 1.0},
+    };
+    float ebner_matrix[3][3] = {
+        {0.5, 0.5, 0.0},
+        {4.4550, -4.8510, 0.3960},
+        {0.8056, 0.3572, -1.1628},
+    };
+
+    float xyz_to_lms[3][3];
+    mm_33_33(xyz_to_lms, crosstalk_matrix, xyz_to_lms_hpe);
+    float curr_gamut_to_lms[3][3];
+
+    if (input_color_gamut == DWG) {
+        mm_33_33(curr_gamut_to_lms, xyz_to_lms, dwg_to_xyz);
+    } else {
+        copy_mat_33(curr_gamut_to_lms, xyz_to_lms);
+    }
+
+    float lmsp_to_ictcp[3][3];
+    mm_33_33(lmsp_to_ictcp, rotation_matrix, ebner_matrix);
+    float scaled_lmsp_to_ictcp[3][3];
+    element_wise_multiplication(scaled_lmsp_to_ictcp, lmsp_to_ictcp, scalar_mat);
+
+    // The actual pixel logic
+    float3 curr_gamut_rgb = make_float3(p_R, p_G, p_B);
+    if (input_tone_curve == DI) {
+        curr_gamut_rgb = make_float3(di_to_linear(curr_gamut_rgb.x), di_to_linear(curr_gamut_rgb.y), di_to_linear(curr_gamut_rgb.z));
+    } else if (input_tone_curve == LINEAR) {
+        // Do nothing
+    }
+
+    float3 lms = mv_33_3(curr_gamut_to_lms, curr_gamut_rgb);
+    // PQ encoding is not well defined for negative inputs.
+    lms = make_float3(_fmaxf(lms.x, 0.0), _fmaxf(lms.y, 0.0), _fmaxf(lms.z, 0.0));
+    float3 lmsp = make_float3(linear_to_st2084(lms.x), linear_to_st2084(lms.y), linear_to_st2084(lms.z));
+    float3 ictcp = mv_33_3(scaled_lmsp_to_ictcp, lmsp);
+    if (scale_chroma_to_05) {
+        ictcp.y += 0.5;
+        ictcp.z += 0.5;
+    }
+    return ictcp;
+}
