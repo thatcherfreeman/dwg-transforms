@@ -1,0 +1,74 @@
+// Written by Thatcher Freeman
+// Based on the FLog2C White Paper
+// clang-format off
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
+
+__DEVICE__ float flog2c_to_linear(float t) {
+    // Same as flog2.
+    const float a = 5.555556f;
+    const float b = 0.064829f;
+    const float c = 0.245281f;
+    const float d = 0.384316f;
+    const float e = 8.799461f;
+    const float f = 0.092864f;
+    const float cut1 = 0.000889f;
+    const float cut2 = 0.100686685370811f;
+
+    float out;
+    if (t >= cut2) {
+        out = ((_exp10f((t - d) / c) - b) / a);
+    } else {
+        out = ((t - f) / e);
+    }
+    return out;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb = make_float3(flog2c_to_linear(p_R), flog2c_to_linear(p_G), flog2c_to_linear(p_B));
+
+    // Primaries taken from white paper.
+    float matrix[3][3] = {
+        { 1.116848, -0.178447,  0.061599},
+        {-0.010283,  0.919171,  0.091111},
+        { 0.082289,  0.082275,  0.835436},
+    };
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix, rgb);
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
+    }
+
+    float3 out = make_float3(0.0, 0.0, 0.0);
+    if (output_tone_curve == DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
