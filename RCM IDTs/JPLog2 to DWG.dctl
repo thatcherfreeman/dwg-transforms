@@ -1,0 +1,74 @@
+
+
+// Written by Thatcher Freeman
+// Based on the jplog2 white paper
+// clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_JPLOG2, INPUT_LINEAR}, {JPLog2, Linear})
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_DI, OUTPUT_LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, AP1}, {DaVinci Wide Gamut, AP1})
+
+// clang-format on
+
+__DEVICE__ float jplog2_to_linear(float in) {
+    const float JPLOG2_LIN_BRKPNT = 0.00680;
+    const float JPLOG2_LOG_BRKPNT = 0.16129; /* 10bit cv = 165 */
+    const float JPLOG2_LINTOLOG_SLOPE = 10.367739;
+    const float JPLOG2_LINTOLOG_YINT = 0.0907775;
+    if (in <= JPLOG2_LOG_BRKPNT)
+        return (in - JPLOG2_LINTOLOG_YINT) / JPLOG2_LINTOLOG_SLOPE;
+    else /* if (in > JPLOG2_LOG_BRKPNT) */
+        return _powf(2.0, in * 20.46 - 10.5);
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb_lin;
+    if (input_tone_curve == INPUT_JPLOG2) {
+        rgb_lin = make_float3(jplog2_to_linear(p_R), jplog2_to_linear(p_G), jplog2_to_linear(p_B));
+    } else if (input_tone_curve == INPUT_LINEAR) {
+        rgb_lin = make_float3(p_R, p_G, p_B);
+    }
+
+    // AP1 to DWG with CAT02 chromatic adaptation
+    // Used this calculator: https://www.colour-science.org:8010/apps/rgb_colourspace_transformation_matrix
+    float matrix[3][3] = {
+        {0.914854961265100, 0.002844565439738, 0.082300473295161},
+        {0.031184511763026, 0.783316306943601, 0.185499181293374},
+        {0.067400184075931, 0.085586088566144, 0.847013727357926},
+    };
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix, rgb_lin);
+    } else if (output_color_gamut == AP1) {
+        rgb2 = rgb_lin;
+    }
+
+    float3 out = make_float3(0.0, 0.0, 0.0);
+    if (output_tone_curve == OUTPUT_DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == OUTPUT_LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
