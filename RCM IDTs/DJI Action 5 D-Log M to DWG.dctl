@@ -1,0 +1,77 @@
+// Written by Thatcher Freeman
+// Fit to footage shot on DJI Action 5.
+// clang-format off
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
+
+__DEVICE__ float dlogm_to_linear(float x) {
+    const float x_shift = -2.426687717437744;
+    const float y_shift = 0.9350103139877319;
+    const float scale = 6.127270221710205;
+    const float slope = 1.032887578010559;
+    const float slope2 = 1.8330339193344116;
+    const float intercept = 0.5343853235244751;
+    const float cut = 0.6678594946861267;
+    const float mid_gray_scaling = 0.016293399035930634;
+
+    float tmp = _powf(2.0, x * scale + y_shift) + x_shift;
+    float out;
+    if (tmp < cut) {
+        out = tmp * slope + intercept;
+    } else {
+        out = tmp * slope2;
+    }
+    out *= mid_gray_scaling;
+    return out;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb = make_float3(dlogm_to_linear(p_R), dlogm_to_linear(p_G), dlogm_to_linear(p_B));
+
+    // Fit to a colorchecker under daylight and under tungsten light.
+    // Estimated primaries:
+    // [0.69213704 0.31774162 1.        ]] [[0.23805139 1.01477295 1.        ]] [[0.14148621 0.04603204 1.        ]] [[0.3127 0.329  1. ]]
+    float matrix[3][3] = {
+        {0.79846643, 0.07372841, 0.12780516},
+        {0.06153171, 0.7303191, 0.20814919},
+        {0.05980929, -0.04343518, 0.98362589},
+    };
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix, rgb);
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
+    }
+
+    float3 out = make_float3(0.0, 0.0, 0.0);
+    if (output_tone_curve == DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
