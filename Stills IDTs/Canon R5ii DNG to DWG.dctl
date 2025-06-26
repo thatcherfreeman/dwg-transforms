@@ -4,7 +4,7 @@
 // clang-format off
 DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_BMD, INPUT_LINEAR}, {Blackmagic Design Film Gen 1, Linear})
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_DI, OUTPUT_LINEAR}, {DaVinci Intermediate, Linear})
-DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE, CCG_NEUTRAL}, {DaVinci Wide Gamut, Camera Native, Canon Cinema Gamut Neutral Matrix})
 
 // clang-format on
 
@@ -57,6 +57,13 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         {0.064173241538688, -0.056897412753814, 0.88423053151254},
     };
 
+    float matrix_to_ccg[3][3] = {
+        // Fit to color checker shot in DNG, matched to clog2 neutral matrix shot of the same color chart.
+        {0.92756886, -0.10473787, 0.15341615},
+        {0.04476801, 0.89573837, 0.03207476},
+        {0.0589128, -0.02151483, 0.95058414},
+    };
+
     // Linearize input
     float3 rgb;
     if (input_tone_curve == INPUT_BMD) {
@@ -65,7 +72,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb = make_float3(p_R, p_G, p_B);
     }
 
-    rgb *= 0.18f / 0.08f;
+    rgb *= _exp2f(0.85f);
 
     // Apply matrix
     float3 rgb2;
@@ -73,6 +80,8 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = mv_33_3(matrix_cc, rgb);
     } else if (output_color_gamut == NATIVE) {
         rgb2 = rgb;
+    } else if (output_color_gamut == CCG_NEUTRAL) {
+        rgb2 = mv_33_3(matrix_to_ccg, rgb);
     }
 
     // Log encode output, if needed
