@@ -60,12 +60,13 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Estimated from colorchecker 24 in daylight and in tungsten.
     // Estimated xyY RGBW primaries:
-    //  [[0.67238452 0.15890418 1.        ]] [[0.35325178 1.44028367 1.        ]] [[ 0.099263   -0.08675105  1.        ]] [[0.3127 0.329  1.    ]]
+    //  [[0.67238452 0.15890418 1.        ]] [[0.35325178 1.44028367 1.        ]] [[ 0.099263   -0.08675105  1.        ]] [[0.3127 0.329  1.
+    //  ]]
     // Then manually rotated red by 4.5 degrees with matrix manipulator.
     float matrix[3][3] = {
-        { 0.78297,   0.17165,  0.04538},
-        {-0.02984,  1.00166,  0.02818},
-        { 0.12825, -0.31544,  1.18719},
+        {0.78297, 0.17165, 0.04538},
+        {-0.02984, 1.00166, 0.02818},
+        {0.12825, -0.31544, 1.18719},
     };
 
     float3 rgb2;
