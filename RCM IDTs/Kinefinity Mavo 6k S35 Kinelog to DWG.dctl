@@ -2,6 +2,7 @@
 // Written by Thatcher Freeman
 // Based on clips shot on Terra 4k
 // clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_KINELOG, INPUT_LINEAR}, {KineLog, Linear})
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
@@ -49,15 +50,22 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(mavo_6k_s35_kinelog_to_linear(p_R), mavo_6k_s35_kinelog_to_linear(p_G), mavo_6k_s35_kinelog_to_linear(p_B));
+
+    float3 rgb;
+    if (input_tone_curve == INPUT_KINELOG) {
+        rgb = make_float3(mavo_6k_s35_kinelog_to_linear(p_R), mavo_6k_s35_kinelog_to_linear(p_G), mavo_6k_s35_kinelog_to_linear(p_B));
+    } else if (input_tone_curve == INPUT_LINEAR) {
+        rgb = make_float3(p_R, p_G, p_B);
+    }
 
     // Estimated from colorchecker 24 in daylight and in tungsten.
     // Estimated xyY RGBW primaries:
     //  [[0.67238452 0.15890418 1.        ]] [[0.35325178 1.44028367 1.        ]] [[ 0.099263   -0.08675105  1.        ]] [[0.3127 0.329  1.    ]]
+    // Then manually rotated red by 4.5 degrees with matrix manipulator.
     float matrix[3][3] = {
-        { 0.7829732,   0.17164823,  0.04537857},
-        {-0.06941111,  1.04206353,  0.02734758},
-        { 0.15606119, -0.29475176,  1.13869056},
+        { 0.78297,   0.17165,  0.04538},
+        {-0.02984,  1.00166,  0.02818},
+        { 0.12825, -0.31544,  1.18719},
     };
 
     float3 rgb2;

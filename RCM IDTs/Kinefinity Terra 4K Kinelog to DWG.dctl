@@ -2,6 +2,7 @@
 // Written by Thatcher Freeman
 // Based on clips shot on Terra 4k
 // clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_KINELOG, INPUT_LINEAR}, {KineLog, Linear})
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
@@ -45,7 +46,13 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
-    float3 rgb = make_float3(terra_4k_kinelog_to_linear(p_R), terra_4k_kinelog_to_linear(p_G), terra_4k_kinelog_to_linear(p_B));
+
+    float3 rgb;
+    if (input_tone_curve == INPUT_KINELOG) {
+        rgb = make_float3(terra_4k_kinelog_to_linear(p_R), terra_4k_kinelog_to_linear(p_G), terra_4k_kinelog_to_linear(p_B));
+    } else if (input_tone_curve == INPUT_LINEAR) {
+        rgb = make_float3(p_R, p_G, p_B);
+    }
 
     // Estimated from colorchecker 24 in daylight.
     // Estimated xyY RGBW primaries:
