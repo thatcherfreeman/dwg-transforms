@@ -1,0 +1,86 @@
+
+// Written by Thatcher Freeman
+// Matrices based on dpreview studio test clip and exif metadata
+// clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_BMD, INPUT_LINEAR}, {Blackmagic Design Film Gen 1, Linear})
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_DI, OUTPUT_LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
+
+__DEVICE__ float bmd_film_gen1_to_linear(float x) {
+    const float base = 213.49122619628906;
+    const float offset = -0.03251856192946434;
+    const float scale = 0.0271604023873806;
+    const float slope = 0.2012624889612198;
+    const float intercept = -0.007122418377548456;
+    const float cut = 0.061324626207351685;
+    const float mid_gray_scaling = 1.0;
+
+    float out;
+    if (x < cut) {
+        out = slope * x + intercept;
+    } else {
+        out = _powf(base, x) * scale + offset;
+    }
+    out *= mid_gray_scaling;
+    return out;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float matrix_cc[3][3] = {
+        // Calculated with default method, d65 white balance.
+        {0.8876397167912, 0.20509067308978, -0.11060190877731},
+        {-0.0020897537418563, 1.1372104860432, -0.1209687942165},
+        {0.054958628279952, -0.033248626831335, 0.98200957936284},
+    };
+
+    // Linearize input
+    float3 rgb;
+    if (input_tone_curve == INPUT_BMD) {
+        rgb = make_float3(bmd_film_gen1_to_linear(p_R), bmd_film_gen1_to_linear(p_G), bmd_film_gen1_to_linear(p_B));
+    } else if (input_tone_curve == INPUT_LINEAR) {
+        rgb = make_float3(p_R, p_G, p_B);
+    }
+
+    rgb *= 0.18f / 0.09f;
+
+    // Apply matrix
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix_cc, rgb);
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
+    }
+
+    // Log encode output, if needed
+    float3 out = make_float3(0.0, 0.0, 0.0);
+    if (output_tone_curve == OUTPUT_DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == OUTPUT_LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
