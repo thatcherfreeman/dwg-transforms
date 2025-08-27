@@ -52,9 +52,10 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float matrix_cc[3][3] = {
         // Calculated with default method, d65 white balance.
-        {0.8876397167912, 0.20509067308978, -0.11060190877731},
-        {-0.0020897537418563, 1.1372104860432, -0.1209687942165},
-        {0.054958628279952, -0.033248626831335, 0.98200957936284},
+        // Turns out to be identical to the FX3 one.
+        {0.90756811924031, 0.20242725988185, -0.10999537912215},
+        {-0.0021366708105717, 1.1224420844231, -0.12030541361257},
+        {0.056192504639579, -0.032816843023159, 0.97662433838358},
     };
 
     // Linearize input
