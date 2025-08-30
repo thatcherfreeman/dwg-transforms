@@ -1,6 +1,6 @@
 
 // Written by Thatcher Freeman
-// Matrices based on dpreview studio test clip and exif metadata
+// Matrices based on exif metadata
 // clang-format off
 DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_BMD, INPUT_LINEAR}, {Blackmagic Design Film Gen 1, Linear})
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_DI, OUTPUT_LINEAR}, {DaVinci Intermediate, Linear})
