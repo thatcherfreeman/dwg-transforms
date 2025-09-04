@@ -52,9 +52,9 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float matrix_cc[3][3] = {
         // Calculated with default method, d65 white balance.
-        {0.8550220979534, 0.21269003664335, -0.067712134596756},
-        {0.021508383038486, 1.0255761841257, -0.047084567164151},
-        {0.089256397787522, -0.04161747071988, 0.95236107293236},
+        {0.82598639988472, 0.25419761863283, -0.080184018517549},
+        {0.02281185941023, 1.064246459746, -0.087058319156216},
+        {0.078159220407881, -0.022806427005403, 0.94464720659752},
     };
 
     // Linearize input
@@ -73,7 +73,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    rgb2 *= 0.18f / 0.12f;
+    rgb2 *= 0.18f / 0.085f;
 
     // Log encode output, if needed
     float3 out = make_float3(0.0, 0.0, 0.0);
