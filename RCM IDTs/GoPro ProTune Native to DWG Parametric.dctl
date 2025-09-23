@@ -9,7 +9,7 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 __DEVICE__ float protune_to_linear(float t) {
     // Protune function taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
-    return (_powf(113.0, t) - 1.0) / 112.0;
+    return (_powf(113.0f, t) - 1.0f) / 112.0f;
 }
 
 __DEVICE__ float linear_to_di(float x) {
@@ -39,24 +39,24 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     if (color_profile_input == COLOR) {
         // Convert to flat profile via a gamma adjustment
-        rgb.x = _copysignf(_powf(_fabs(rgb.x), 0.75), rgb.x);
-        rgb.y = _copysignf(_powf(_fabs(rgb.y), 0.75), rgb.y);
-        rgb.z = _copysignf(_powf(_fabs(rgb.z), 0.75), rgb.z);
+        rgb.x = _copysignf(_powf(_fabs(rgb.x), 0.75f), rgb.x);
+        rgb.y = _copysignf(_powf(_fabs(rgb.y), 0.75f), rgb.y);
+        rgb.z = _copysignf(_powf(_fabs(rgb.z), 0.75f), rgb.z);
     }
     // else if (color_profile_input == FLAT) {
     //     // Do nothing, Flat is already linear.
     // }
 
     // Gain estimated from some auto exposures on gray card and color chart.
-    const float gain = 1.46014;
+    const float gain = 1.46014f;
     rgb *= gain;
 
     // Used values calculated from http://color.support/colorspacecalculator.html
     // Native color primaries taken from https://nick-shaw.github.io/cinematiccolor/common-rgb-color-spaces.html
     float matrix[3][3] = {
-        {0.711228, 0.234219, 0.054553},
-        {-0.046155, 0.948576, 0.097580},
-        {0.107143, -0.121310, 1.014166},
+        {0.711228f, 0.234219f, 0.054553f},
+        {-0.046155f, 0.948576f, 0.097580f},
+        {0.107143f, -0.121310f, 1.014166f},
     };
 
     float3 rgb2;
