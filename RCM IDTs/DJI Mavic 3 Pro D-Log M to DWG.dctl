@@ -8,21 +8,21 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 __DEVICE__ float mavic_3_pro_dlogm_to_linear(float x) {
     // Based on clips shot on Mavic 3 Pro, wide lens in D-Log M
     // Maps 40% IRE to 18% gray.
-    const float x_shift = -0.736169159412384;
-    const float y_shift = -0.9837290048599243;
-    const float scale = 7.4200921058654785;
-    const float slope = 0.4385978579521179;
-    const float intercept = 0.09801799058914185;
-    const float cut = 0.1745949685573578;
+    const float x_shift = -0.736169159412384f;
+    const float y_shift = -0.9837290048599243f;
+    const float scale = 7.4200921058654785f;
+    const float slope = 0.4385978579521179f;
+    const float intercept = 0.09801799058914185f;
+    const float cut = 0.1745949685573578f;
 
-    float tmp = _powf(2.0, x * scale + y_shift) + x_shift;
+    float tmp = _powf(2.0f, x * scale + y_shift) + x_shift;
     float out;
     if (tmp < cut) {
         out = tmp * slope + intercept;
     } else {
         out = tmp;
     }
-    out *= 0.0558909009613;
+    out *= 0.0558909009613f;
     return out;
 }
 
@@ -56,9 +56,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // rgbw: [[0.69644137 0.30997671 1.        ]] [[0.25352098 0.6715864  1.        ]] [[0.18932426 0.05379236 1.        ]] [[0.3127
     // 0.329  1.    ]]
     float matrix[3][3] = {
-        {0.58153814, 0.20390556, 0.21455631},
-        {0.03777275, 0.81320261, 0.14902464},
-        {0.04443076, 0.16222857, 0.79334067},
+        {0.58153814f, 0.20390556f, 0.21455631f},
+        {0.03777275f, 0.81320261f, 0.14902464f},
+        {0.04443076f, 0.16222857f, 0.79334067f},
     };
 
     float3 rgb2;
@@ -68,7 +68,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {
