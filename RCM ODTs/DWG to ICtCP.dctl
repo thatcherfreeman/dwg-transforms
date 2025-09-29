@@ -16,13 +16,13 @@ __DEVICE__ float dot_product(float3 a, float3 b) {
 
 __DEVICE__ float st2084_to_linear(float x) {
     // x is code value 0-1, outputs linear light with 1.0 = 100 nits.
-    const float m1 = 1305.0 / 8192.0;
-    const float m2 = 2523.0 / 32.0;
-    const float c1 = 3424.0 / 4096.0;
-    const float c2 = 2413.0 / 128.0;
-    const float c3 = 2392.0 / 128.0;
+    const float m1 = 1305.0f / 8192.0f;
+    const float m2 = 2523.0f / 32.0f;
+    const float c1 = 3424.0f / 4096.0f;
+    const float c2 = 2413.0f / 128.0f;
+    const float c3 = 2392.0f / 128.0f;
 
-    float out_lin = 100.0 * powf(_fmaxf(powf(x, 1.0 / m2) - c1, 0.0) / (c2 - (c3 * powf(x, 1.0 / m2))), 1.0 / m1);
+    float out_lin = 100.0f * powf(_fmaxf(powf(x, 1.0f / m2) - c1, 0.0f) / (c2 - (c3 * powf(x, 1.0f / m2))), 1.0f / m1);
 
     // Gain 10 nits to mid gray.
     return out_lin;
@@ -30,16 +30,16 @@ __DEVICE__ float st2084_to_linear(float x) {
 
 __DEVICE__ float linear_to_st2084(float y) {
     // Gain mid gray to 10 nits.
-    float x = y / 100.0;
+    float x = y / 100.0f;
 
     // x is code value 0-1, y is linear light with 1.0 = 100 nits.
-    const float m1 = 1305.0 / 8192.0;
-    const float m2 = 2523.0 / 32.0;
-    const float c1 = 3424.0 / 4096.0;
-    const float c2 = 2413.0 / 128.0;
-    const float c3 = 2392.0 / 128.0;
+    const float m1 = 1305.0f / 8192.0f;
+    const float m2 = 2523.0f / 32.0f;
+    const float c1 = 3424.0f / 4096.0f;
+    const float c2 = 2413.0f / 128.0f;
+    const float c3 = 2392.0f / 128.0f;
 
-    return powf((c1 + c2 * powf(x, m1)) / (1.0 + c3 * powf(x, m1)), m2);
+    return powf((c1 + c2 * powf(x, m1)) / (1.0f + c3 * powf(x, m1)), m2);
 }
 
 __DEVICE__ float linear_to_di(float x) {
@@ -121,46 +121,46 @@ __DEVICE__ void mat_inverse_33(float m[3][3], float inv_buf[3][3]) {
 }
 
 __DEVICE__ void make_rotation_matrix_yz(float dest[3][3], float angle_rad) {
-    dest[0][0] = 1.0;
-    dest[0][1] = 0.0;
-    dest[0][2] = 0.0;
-    dest[1][0] = 0.0;
+    dest[0][0] = 1.0f;
+    dest[0][1] = 0.0f;
+    dest[0][2] = 0.0f;
+    dest[1][0] = 0.0f;
     dest[1][1] = _cosf(angle_rad);
-    dest[1][2] = -1.0 * _sinf(angle_rad);
-    dest[2][0] = 0.0;
+    dest[1][2] = -1.0f * _sinf(angle_rad);
+    dest[2][0] = 0.0f;
     dest[2][1] = _sinf(angle_rad);
     dest[2][2] = _cosf(angle_rad);
 }
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float dwg_to_xyz[3][3] = {
-        {0.700622392093671, 0.148774815123197, 0.101058719834803},
-        {0.274118510906649, 0.873631895940437, -0.147750406847086},
-        {-0.098962912883231, -0.137895325075543, 1.325915988718652},
+        {0.700622392093671f, 0.148774815123197f, 0.101058719834803f},
+        {0.274118510906649f, 0.873631895940437f, -0.147750406847086f},
+        {-0.098962912883231f, -0.137895325075543f, 1.325915988718652f},
     };
     float xyz_to_lms_hpe[3][3] = {
-        {0.4002, 0.7076, -0.0808},
-        {-0.2263, 1.1653, 0.0457},
-        {0, 0, 0.9182},
+        {0.4002f, 0.7076f, -0.0808f},
+        {-0.2263f, 1.1653f, 0.0457f},
+        {0, 0, 0.9182f},
     };
-    const float crosstalk = 0.04;
+    const float crosstalk = 0.04f;
     float crosstalk_matrix[3][3] = {
-        {1.0 - 2.0 * crosstalk, crosstalk, crosstalk},
-        {crosstalk, 1.0 - 2.0 * crosstalk, crosstalk},
-        {crosstalk, crosstalk, 1.0 - 2.0 * crosstalk},
+        {1.0f - 2.0f * crosstalk, crosstalk, crosstalk},
+        {crosstalk, 1.0f - 2.0f * crosstalk, crosstalk},
+        {crosstalk, crosstalk, 1.0f - 2.0f * crosstalk},
     };
-    const float angle = 1.134464; // documentation says this number of radians aligns with skintones.
+    const float angle = 1.134464f; // documentation says this number of radians aligns with skintones.
     float rotation_matrix[3][3];
     make_rotation_matrix_yz(rotation_matrix, angle);
     float scalar_mat[3][3] = {
-        {1.0, 1.0, 1.0},
-        {1.4, 1.4, 1.4},
-        {1.0, 1.0, 1.0},
+        {1.0f, 1.0f, 1.0f},
+        {1.4f, 1.4f, 1.4f},
+        {1.0f, 1.0f, 1.0f},
     };
     float ebner_matrix[3][3] = {
-        {0.5, 0.5, 0.0},
-        {4.4550, -4.8510, 0.3960},
-        {0.8056, 0.3572, -1.1628},
+        {0.5f, 0.5f, 0.0f},
+        {4.4550f, -4.8510f, 0.3960f},
+        {0.8056f, 0.3572f, -1.1628f},
     };
 
     float xyz_to_lms[3][3];
@@ -188,12 +188,12 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     float3 lms = mv_33_3(curr_gamut_to_lms, curr_gamut_rgb);
     // PQ encoding is not well defined for negative inputs.
-    lms = make_float3(_fmaxf(lms.x, 0.0), _fmaxf(lms.y, 0.0), _fmaxf(lms.z, 0.0));
+    lms = make_float3(_fmaxf(lms.x, 0.0f), _fmaxf(lms.y, 0.0f), _fmaxf(lms.z, 0.0f));
     float3 lmsp = make_float3(linear_to_st2084(lms.x), linear_to_st2084(lms.y), linear_to_st2084(lms.z));
     float3 ictcp = mv_33_3(scaled_lmsp_to_ictcp, lmsp);
     if (scale_chroma_to_05) {
-        ictcp.y += 0.5;
-        ictcp.z += 0.5;
+        ictcp.y += 0.5f;
+        ictcp.z += 0.5f;
     }
     return ictcp;
 }

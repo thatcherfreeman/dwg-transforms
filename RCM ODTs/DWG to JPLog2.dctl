@@ -10,10 +10,10 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 1, {D
 // clang-format on
 
 __DEVICE__ float linear_to_jplog2(float in) {
-    const float JPLOG2_LIN_BRKPNT = 0.00680;
-    const float JPLOG2_LOG_BRKPNT = 0.16129; /* 10bit cv = 165 */
-    const float JPLOG2_LINTOLOG_SLOPE = 10.367739;
-    const float JPLOG2_LINTOLOG_YINT = 0.0907775;
+    const float JPLOG2_LIN_BRKPNT = 0.00680f;
+    const float JPLOG2_LOG_BRKPNT = 0.16129f; /* 10bit cv = 165 */
+    const float JPLOG2_LINTOLOG_SLOPE = 10.367739f;
+    const float JPLOG2_LINTOLOG_YINT = 0.0907775f;
     if (in <= JPLOG2_LIN_BRKPNT)
         return JPLOG2_LINTOLOG_SLOPE * in + JPLOG2_LINTOLOG_YINT;
     else /* if (in > JPLOG2_LIN_BRKPNT) */
@@ -53,9 +53,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // DWG to AP1 with CAT02 chromatic adaptation
     // Used this calculator: https://www.colour-science.org:8010/apps/rgb_colourspace_transformation_matrix
     float matrix[3][3] = {
-        {1.100808130774298, 0.007877619027072, -0.108685749801371},
-        {-0.023646220569815, 1.307750994717714, -0.284104774147899},
-        {-0.085206273272155, -0.132767913667303, 1.217974186939458},
+        {1.100808130774298f, 0.007877619027072f, -0.108685749801371f},
+        {-0.023646220569815f, 1.307750994717714f, -0.284104774147899f},
+        {-0.085206273272155f, -0.132767913667303f, 1.217974186939458f},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
@@ -64,7 +64,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = mv_33_3(matrix, rgb_lin);
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == OUTPUT_JPLOG2) {
         out = make_float3(linear_to_jplog2(rgb2.x), linear_to_jplog2(rgb2.y), linear_to_jplog2(rgb2.z));
     } else if (output_tone_curve == OUTPUT_LINEAR) {

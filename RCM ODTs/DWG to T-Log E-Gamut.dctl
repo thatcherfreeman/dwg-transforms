@@ -14,22 +14,22 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 // White is D65
 
 __DEVICE__ float linear_to_tlog(float x) {
-    const float w = 128.0;
-    const float g = 16.0;
-    const float o = 0.075;
+    const float w = 128.0f;
+    const float g = 16.0f;
+    const float o = 0.075f;
 
-    float b = 1.0 / (0.7107 + 1.2359 * _logf(w * g));
-    float gs = g / (1.0 - o);
+    float b = 1.0f / (0.7107f + 1.2359f * _logf(w * g));
+    float gs = g / (1.0f - o);
     float C = b / gs;
-    float a = 1.0 - b * _logf(w + C);
+    float a = 1.0f - b * _logf(w + C);
     float y0 = a + b * _logf(C);
-    float s = (1.0 - o) / (1.0 - y0);
-    float A = 1.0 + (a - 1.0) * s;
+    float s = (1.0f - o) / (1.0f - y0);
+    float A = 1.0f + (a - 1.0f) * s;
     float B = b * s;
     float G = gs * s;
 
     float t;
-    if (x < 0.0) {
+    if (x < 0.0f) {
         t = G * x + o;
     } else {
         t = _logf(x + C) * B + A;
@@ -61,9 +61,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     out.y = di_to_linear(out.y);
     out.z = di_to_linear(out.z);
     float dwg_to_egamut[3][3] = {
-        {0.994027, -0.032189, 0.038162},
-        {-0.004919, 1.070020, -0.065101},
-        {0.003034, -0.049950, 1.046916},
+        {0.994027f, -0.032189f, 0.038162f},
+        {-0.004919f, 1.070020f, -0.065101f},
+        {0.003034f, -0.049950f, 1.046916f},
     };
     out = mv_33_3(dwg_to_egamut, out);
     out.x = linear_to_tlog(out.x);

@@ -8,26 +8,26 @@ DEFINE_UI_PARAMS(direction, Direction, DCTLUI_COMBO_BOX, 1, {ANN1_EOTF, ANN1_EOT
 // clang-format on
 
 __DEVICE__ float annex_1_eotf(float v, float lw, float lb, float gamma) {
-    const float a = _powf(_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma), gamma);
-    const float b = _powf(lb, 1.0 / gamma) / (_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma));
-    float l = a * _powf(_fmaxf(v + b, 0.0), gamma);
+    const float a = _powf(_powf(lw, 1.0f / gamma) - _powf(lb, 1.0f / gamma), gamma);
+    const float b = _powf(lb, 1.0f / gamma) / (_powf(lw, 1.0f / gamma) - _powf(lb, 1.0f / gamma));
+    float l = a * _powf(_fmaxf(v + b, 0.0f), gamma);
     // Not in the eotf spec, but scaling by lw so that the result is in the 0-1 range.
     return l / lw;
 }
 
 __DEVICE__ float annex_1_eotf_inv(float l, float lw, float lb, float gamma) {
-    const float a = _powf(_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma), gamma);
-    const float b = _powf(lb, 1.0 / gamma) / (_powf(lw, 1.0 / gamma) - _powf(lb, 1.0 / gamma));
-    float v = _powf(l * lw / a, 1.0 / gamma) - b;
+    const float a = _powf(_powf(lw, 1.0f / gamma) - _powf(lb, 1.0f / gamma), gamma);
+    const float b = _powf(lb, 1.0f / gamma) / (_powf(lw, 1.0f / gamma) - _powf(lb, 1.0f / gamma));
+    float v = _powf(l * lw / a, 1.0f / gamma) - b;
     return v;
 }
 
 __DEVICE__ float appx_1_eotf(float v, float lw, float appx1_b) {
-    const float vc = 0.35;
-    const float a1 = 2.6;
-    const float a2 = 3.0;
+    const float vc = 0.35f;
+    const float a1 = 2.6f;
+    const float a2 = 3.0f;
     const float b = appx1_b;
-    const float k = lw / _powf(1.0 + b, a1);
+    const float k = lw / _powf(1.0f + b, a1);
     float l;
     if (v < vc) {
         l = k * _powf(vc + b, a1 - a2) * _powf(v + b, a2);
@@ -39,37 +39,37 @@ __DEVICE__ float appx_1_eotf(float v, float lw, float appx1_b) {
 }
 
 __DEVICE__ float appx_1_eotf_inv(float l, float lw, float appx1_b) {
-    const float vc = 0.35;
-    const float a1 = 2.6;
-    const float a2 = 3.0;
+    const float vc = 0.35f;
+    const float a1 = 2.6f;
+    const float a2 = 3.0f;
     const float b = appx1_b;
-    const float k = lw / _powf(1.0 + b, a1);
+    const float k = lw / _powf(1.0f + b, a1);
     float cutoff = k * _powf(vc + b, a1);
     float v;
     if (l * lw < cutoff) {
-        v = _powf(l * lw / (k * _powf(vc + b, a1 - a2)), 1.0 / a2) - b;
+        v = _powf(l * lw / (k * _powf(vc + b, a1 - a2)), 1.0f / a2) - b;
     } else {
-        v = _powf(l * lw / k, 1.0 / a1) - b;
+        v = _powf(l * lw / k, 1.0f / a1) - b;
     }
     return v;
 }
 
 __DEVICE__ float oetf(float l) {
     float v;
-    if (l > 0.018) {
-        v = 1.099 * _powf(l, 0.45) - 0.099;
+    if (l > 0.018f) {
+        v = 1.099f * _powf(l, 0.45f) - 0.099f;
     } else {
-        v = 4.500 * l;
+        v = 4.500f * l;
     }
     return v;
 }
 
 __DEVICE__ float inv_oetf(float v) {
     float l;
-    if (v > 0.018 * 4.500) {
-        l = _powf(((v + 0.099) / 1.099), 1.0 / 0.45);
+    if (v > 0.018f * 4.500f) {
+        l = _powf(((v + 0.099f) / 1.099f), 1.0f / 0.45f);
     } else {
-        l = v / 4.500;
+        l = v / 4.500f;
     }
     return l;
 }

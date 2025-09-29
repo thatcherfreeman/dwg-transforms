@@ -1,0 +1,43 @@
+// Written by Thatcher Freeman
+// clang-format off
+DEFINE_DCTL_ALPHA_MODE_STRAIGHT
+// clang-format on
+
+__DEVICE__ float powf(float base, float exp) {
+    return _copysignf(_powf(_fabs(base), exp), base);
+}
+
+__DEVICE__ float di_to_linear(float t) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    // const float lin_cut = 0.00262409f; // Should be equal to ((cut2 - f) / e)
+    const float log_cut = 0.02740668f; // should be equal to (e * cut1 + f)
+
+    if (t > log_cut) {
+        return _exp2f((t / c) - b) - a;
+    } else {
+        return t / m;
+    }
+}
+
+__DEVICE__ float4 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B, float p_A) {
+    float4 input = make_float4(p_R, p_G, p_B, p_A);
+    input.x /= input.w;
+    input.y /= input.w;
+    input.z /= input.w;
+
+    float4 output = make_float4(di_to_linear(input.x), di_to_linear(input.y), di_to_linear(input.z), input.w);
+
+    output.x *= input.w;
+    output.y *= input.w;
+    output.z *= input.w;
+    if (input.w == 0.0f) {
+        output.x = 0.0f;
+        output.y = 0.0f;
+        output.z = 0.0f;
+    }
+
+    return output;
+}
