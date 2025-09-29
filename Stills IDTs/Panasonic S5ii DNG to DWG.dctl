@@ -9,13 +9,13 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 // clang-format on
 
 __DEVICE__ float bmd_film_gen1_to_linear(float x) {
-    const float base = 213.49122619628906;
-    const float offset = -0.03251856192946434;
-    const float scale = 0.0271604023873806;
-    const float slope = 0.2012624889612198;
-    const float intercept = -0.007122418377548456;
-    const float cut = 0.061324626207351685;
-    const float mid_gray_scaling = 1.0;
+    const float base = 213.49122619628906f;
+    const float offset = -0.03251856192946434f;
+    const float scale = 0.0271604023873806f;
+    const float slope = 0.2012624889612198f;
+    const float intercept = -0.007122418377548456f;
+    const float cut = 0.061324626207351685f;
+    const float mid_gray_scaling = 1.0f;
 
     float out;
     if (x < cut) {
@@ -59,9 +59,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     float matrix_cc[3][3] = {
         // Calculated with default method, d65 white balance.
-        {0.74172106632546, 0.35770036364073, -0.12580551939937},
-        {-0.02079185182995, 1.0833748065386, -0.074609301536702},
-        {0.037408985796003, 0.0059740003222724, 0.99502745014292},
+        {0.74172106632546f, 0.35770036364073f, -0.12580551939937f},
+        {-0.02079185182995f, 1.0833748065386f, -0.074609301536702f},
+        {0.037408985796003f, 0.0059740003222724f, 0.99502745014292f},
     };
 
     // Linearize input
@@ -81,7 +81,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     }
 
     // Log encode output, if needed
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == OUTPUT_DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == OUTPUT_LINEAR) {

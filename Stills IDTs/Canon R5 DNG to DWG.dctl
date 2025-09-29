@@ -10,13 +10,13 @@ DEFINE_UI_PARAMS(output_color_matrix, Output Color Matrix, DCTLUI_COMBO_BOX, 0, 
 // clang-format on
 
 __DEVICE__ float bmd_film_gen1_to_linear(float x) {
-    const float base = 213.49122619628906;
-    const float offset = -0.03251856192946434;
-    const float scale = 0.0271604023873806;
-    const float slope = 0.2012624889612198;
-    const float intercept = -0.007122418377548456;
-    const float cut = 0.061324626207351685;
-    const float mid_gray_scaling = 1.0;
+    const float base = 213.49122619628906f;
+    const float offset = -0.03251856192946434f;
+    const float scale = 0.0271604023873806f;
+    const float slope = 0.2012624889612198f;
+    const float intercept = -0.007122418377548456f;
+    const float cut = 0.061324626207351685f;
+    const float mid_gray_scaling = 1.0f;
 
     float out;
     if (x < cut) {
@@ -53,17 +53,17 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float matrix_custom[3][3] = {
         // Derived from the colorchecker24 on the dpreview studio test shot, assuming that the chart is post-2014
-        {1.08006387, -0.35443863, 0.27437477},
-        {-0.0330434, 1.29174209, -0.25869869},
-        {0.13807086, -0.1167179, 0.97864704},
+        {1.08006387f, -0.35443863f, 0.27437477f},
+        {-0.0330434f, 1.29174209f, -0.25869869f},
+        {0.13807086f, -0.1167179f, 0.97864704f},
     };
 
     float matrix_exif[3][3] = {
         // Derived from the exif metadata tags of the dpreview studio test shot, so basically this matrix is what would be recommended by
         // adobe.
-        {0.73362542908103, 0.17528911656969, 0.010726298826836},
-        {-0.01070639185591, 1.0417250196093, -0.11137778327584},
-        {0.050723154145478, -0.039404631860825, 0.90832232219291},
+        {0.73362542908103f, 0.17528911656969f, 0.010726298826836f},
+        {-0.01070639185591f, 1.0417250196093f, -0.11137778327584f},
+        {0.050723154145478f, -0.039404631860825f, 0.90832232219291f},
     };
 
     // Linearize input
@@ -81,14 +81,14 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
             rgb2 = mv_33_3(matrix_custom, rgb);
         } else if (output_color_matrix == MAT_EXIF) {
             rgb2 = mv_33_3(matrix_exif, rgb);
-            rgb2 *= 1.0 / 0.918;
+            rgb2 *= 1.0f / 0.918f;
         }
     } else if (output_color_gamut == NATIVE) {
         rgb2 = rgb;
     }
 
     // Log encode output, if needed
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == OUTPUT_DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == OUTPUT_LINEAR) {
