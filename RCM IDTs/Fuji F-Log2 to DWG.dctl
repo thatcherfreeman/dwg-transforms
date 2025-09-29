@@ -52,9 +52,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Primaries taken from white paper.
     float matrix[3][3] = {
-        {0.892112, 0.024369, 0.083519},
-        {0.032617, 0.786138, 0.181246},
-        {0.069977, 0.104749, 0.825273},
+        {0.892112f, 0.024369f, 0.083519f},
+        {0.032617f, 0.786138f, 0.181246f},
+        {0.069977f, 0.104749f, 0.825273f},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
@@ -63,7 +63,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

@@ -9,12 +9,12 @@ __DEVICE__ float dji_air_2s_dlogm_to_linear(float x) {
     // Based on clips shot on Air 2S in D-LogM
     // Maps 60% IRE input to mid gray.
 
-    const float base = 124.35838317871094;
-    const float offset = -0.05056333169341087;
-    const float scale = 0.1246783435344696;
-    const float slope = 1.712338924407959;
-    const float intercept = -0.06705326586961746;
-    const float cut = 0.2170175313949585;
+    const float base = 124.35838317871094f;
+    const float offset = -0.05056333169341087f;
+    const float scale = 0.1246783435344696f;
+    const float slope = 1.712338924407959f;
+    const float intercept = -0.06705326586961746f;
+    const float cut = 0.2170175313949585f;
 
     float out;
     if (x < cut) {
@@ -22,7 +22,7 @@ __DEVICE__ float dji_air_2s_dlogm_to_linear(float x) {
     } else {
         out = _powf(base, x) * scale + offset;
     }
-    out *= 0.18 / 2.20158;
+    out *= 0.18f / 2.20158f;
     return out;
 }
 
@@ -55,9 +55,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // RGBW: [[0.76129243 0.33469502 1.        ]] [[0.18291758 0.76306448 1.        ]] [[ 0.12775767 -0.06484718  1.        ]] [[0.3127
     // 0.329  1.    ]] Based on colorchecker shot in daylight
     float matrix[3][3] = {
-        {0.8540371, 0.05811304, 0.08784986},
-        {0.03824643, 0.93416416, 0.02758941},
-        {0.0101824, 0.1447715, 0.84504611},
+        {0.8540371f, 0.05811304f, 0.08784986f},
+        {0.03824643f, 0.93416416f, 0.02758941f},
+        {0.0101824f, 0.1447715f, 0.84504611f},
     };
 
     float3 rgb2;
@@ -67,7 +67,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

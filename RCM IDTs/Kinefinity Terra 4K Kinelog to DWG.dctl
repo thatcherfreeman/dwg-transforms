@@ -9,12 +9,12 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 // clang-format on
 
 __DEVICE__ float terra_4k_kinelog_to_linear(float x) {
-    const float base = 3607.57568359375;
-    const float offset = -0.015968460589647293;
-    const float scale = 0.007402670104056597;
-    const float slope = 0.07792457193136215;
-    const float intercept = -0.0071669695898890495;
-    const float cut = 0.09656248241662979;
+    const float base = 3607.57568359375f;
+    const float offset = -0.015968460589647293f;
+    const float scale = 0.007402670104056597f;
+    const float slope = 0.07792457193136215f;
+    const float intercept = -0.0071669695898890495f;
+    const float cut = 0.09656248241662979f;
 
     if (x < cut) {
         return slope * x + intercept;
@@ -59,9 +59,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // [[0.69586264 0.17941886 1.        ]] [[0.23608622 1.45120862 1.        ]] [[ 0.09763486 -0.13271045  1.        ]] [[0.3127 0.329  1.
     // ]]
     float matrix[3][3] = {
-        {0.9175826, 0.03555074, 0.04686666},
-        {-0.07178172, 1.11461629, -0.04283457},
-        {0.14850592, -0.24569077, 1.09718485},
+        {0.9175826f, 0.03555074f, 0.04686666f},
+        {-0.07178172f, 1.11461629f, -0.04283457f},
+        {0.14850592f, -0.24569077f, 1.09718485f},
     };
 
     float3 rgb2;
@@ -71,7 +71,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

@@ -10,14 +10,14 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 // clang-format on
 
 __DEVICE__ float jplog2_to_linear(float in) {
-    const float JPLOG2_LIN_BRKPNT = 0.00680;
-    const float JPLOG2_LOG_BRKPNT = 0.16129; /* 10bit cv = 165 */
-    const float JPLOG2_LINTOLOG_SLOPE = 10.367739;
-    const float JPLOG2_LINTOLOG_YINT = 0.0907775;
+    const float JPLOG2_LIN_BRKPNT = 0.00680f;
+    const float JPLOG2_LOG_BRKPNT = 0.16129f; /* 10bit cv = 165 */
+    const float JPLOG2_LINTOLOG_SLOPE = 10.367739f;
+    const float JPLOG2_LINTOLOG_YINT = 0.0907775f;
     if (in <= JPLOG2_LOG_BRKPNT)
         return (in - JPLOG2_LINTOLOG_YINT) / JPLOG2_LINTOLOG_SLOPE;
     else /* if (in > JPLOG2_LOG_BRKPNT) */
-        return _powf(2.0, in * 20.46 - 10.5);
+        return _powf(2.0f, in * 20.46f - 10.5f);
 }
 
 __DEVICE__ float linear_to_di(float x) {
@@ -53,9 +53,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // AP1 to DWG with CAT02 chromatic adaptation
     // Used this calculator: https://www.colour-science.org:8010/apps/rgb_colourspace_transformation_matrix
     float matrix[3][3] = {
-        {0.914854961265100, 0.002844565439738, 0.082300473295161},
-        {0.031184511763026, 0.783316306943601, 0.185499181293374},
-        {0.067400184075931, 0.085586088566144, 0.847013727357926},
+        {0.914854961265100f, 0.002844565439738f, 0.082300473295161f},
+        {0.031184511763026f, 0.783316306943601f, 0.185499181293374f},
+        {0.067400184075931f, 0.085586088566144f, 0.847013727357926f},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
@@ -64,7 +64,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb_lin;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == OUTPUT_DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == OUTPUT_LINEAR) {

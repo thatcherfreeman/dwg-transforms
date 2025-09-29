@@ -9,12 +9,12 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 // clang-format on
 
 __DEVICE__ float mavo_6k_s35_kinelog_to_linear(float x) {
-    const float base = 4642.83837890625;
-    const float offset = -0.033478993922472;
-    const float scale = 0.014997675083577633;
-    const float slope = 0.1658787876367569;
-    const float intercept = -0.0165549423545599;
-    const float cut = 0.08793077617883682;
+    const float base = 4642.83837890625f;
+    const float offset = -0.033478993922472f;
+    const float scale = 0.014997675083577633f;
+    const float slope = 0.1658787876367569f;
+    const float intercept = -0.0165549423545599f;
+    const float cut = 0.08793077617883682f;
 
     float out;
     if (x < cut) {
@@ -23,7 +23,7 @@ __DEVICE__ float mavo_6k_s35_kinelog_to_linear(float x) {
         out = _powf(base, x) * scale + offset;
     }
     // Map 40% ire input to mid gray.
-    out *= 0.18 / 0.4058;
+    out *= 0.18f / 0.4058f;
     return out;
 }
 
@@ -64,9 +64,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     //  ]]
     // Then manually rotated red by 4.5 degrees with matrix manipulator.
     float matrix[3][3] = {
-        {0.78297, 0.17165, 0.04538},
-        {-0.02984, 1.00166, 0.02818},
-        {0.12825, -0.31544, 1.18719},
+        {0.78297f, 0.17165f, 0.04538f},
+        {-0.02984f, 1.00166f, 0.02818f},
+        {0.12825f, -0.31544f, 1.18719f},
     };
 
     float3 rgb2;
@@ -76,7 +76,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

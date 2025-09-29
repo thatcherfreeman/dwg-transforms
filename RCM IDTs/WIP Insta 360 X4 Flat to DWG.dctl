@@ -9,16 +9,16 @@ __DEVICE__ float insta_360_x4_flat_to_linear(float x) {
     // Based on clips shot on Mini 4 Pro, in D-Log M
     // Maps 40% IRE to 18% gray.
 
-    const float x_shift = -2.588409662246704;
-    const float y_shift = 1.3655588626861572;
-    const float scale = 6.301053524017334;
-    const float slope = 1.0434024333953857;
-    const float slope2 = 1.8280627727508545;
-    const float intercept = 0.03053007647395134;
-    const float cut = 0.03890865296125412;
-    const float mid_gray_scaling = 0.00807370524853468;
+    const float x_shift = -2.588409662246704f;
+    const float y_shift = 1.3655588626861572f;
+    const float scale = 6.301053524017334f;
+    const float slope = 1.0434024333953857f;
+    const float slope2 = 1.8280627727508545f;
+    const float intercept = 0.03053007647395134f;
+    const float cut = 0.03890865296125412f;
+    const float mid_gray_scaling = 0.00807370524853468f;
 
-    float tmp = _powf(2.0, x * scale + y_shift) + x_shift;
+    float tmp = _powf(2.0f, x * scale + y_shift) + x_shift;
     float out;
     if (tmp < cut) {
         out = tmp * slope + intercept;
@@ -56,9 +56,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Just used rec709 primaries
     float matrix[3][3] = {
-        {0.562767456007, 0.323516588704, 0.113715955289},
-        {0.077754635285, 0.749577346163, 0.172668018552},
-        {0.064669199916, 0.191998692046, 0.743332108037},
+        {0.562767456007f, 0.323516588704f, 0.113715955289f},
+        {0.077754635285f, 0.749577346163f, 0.172668018552f},
+        {0.064669199916f, 0.191998692046f, 0.743332108037f},
     };
 
     float3 rgb2;
@@ -68,7 +68,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

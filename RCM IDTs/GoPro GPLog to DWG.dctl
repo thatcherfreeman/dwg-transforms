@@ -7,10 +7,10 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 // clang-format on
 
 __DEVICE__ float gplog_to_linear(float x) {
-    const float base = 368.58819580078125;
-    const float offset = -0.9869849681854248;
-    const float scale = 0.07249391078948975;
-    const float mid_gray_scaling = 0.18 / 1.2622;
+    const float base = 368.58819580078125f;
+    const float offset = -0.9869849681854248f;
+    const float scale = 0.07249391078948975f;
+    const float mid_gray_scaling = 0.18f / 1.2622f;
 
     float out = scale * (_powf(base, x) + offset);
     out *= mid_gray_scaling;
@@ -50,9 +50,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // ]] [[0.3127 0.329  1.    ]]
 
     float matrix[3][3] = {
-        {0.84909171, 0.10174351, 0.04916478},
-        {-0.06480037, 1.0003319, 0.06446847},
-        {0.08289321, -0.25090356, 1.16801036},
+        {0.84909171f, 0.10174351f, 0.04916478f},
+        {-0.06480037f, 1.0003319f, 0.06446847f},
+        {0.08289321f, -0.25090356f, 1.16801036f},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
@@ -61,7 +61,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

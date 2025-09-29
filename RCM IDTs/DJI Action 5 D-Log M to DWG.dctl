@@ -7,16 +7,16 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 // clang-format on
 
 __DEVICE__ float dlogm_to_linear(float x) {
-    const float x_shift = -2.426687717437744;
-    const float y_shift = 0.9350103139877319;
-    const float scale = 6.127270221710205;
-    const float slope = 1.032887578010559;
-    const float slope2 = 1.8330339193344116;
-    const float intercept = 0.5343853235244751;
-    const float cut = 0.6678594946861267;
-    const float mid_gray_scaling = 0.016293399035930634;
+    const float x_shift = -2.426687717437744f;
+    const float y_shift = 0.9350103139877319f;
+    const float scale = 6.127270221710205f;
+    const float slope = 1.032887578010559f;
+    const float slope2 = 1.8330339193344116f;
+    const float intercept = 0.5343853235244751f;
+    const float cut = 0.6678594946861267f;
+    const float mid_gray_scaling = 0.016293399035930634f;
 
-    float tmp = _powf(2.0, x * scale + y_shift) + x_shift;
+    float tmp = _powf(2.0f, x * scale + y_shift) + x_shift;
     float out;
     if (tmp < cut) {
         out = tmp * slope + intercept;
@@ -56,9 +56,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // Estimated primaries:
     // [0.69213704 0.31774162 1.        ]] [[0.23805139 1.01477295 1.        ]] [[0.14148621 0.04603204 1.        ]] [[0.3127 0.329  1. ]]
     float matrix[3][3] = {
-        {0.79846643, 0.07372841, 0.12780516},
-        {0.06153171, 0.7303191, 0.20814919},
-        {0.05980929, -0.04343518, 0.98362589},
+        {0.79846643f, 0.07372841f, 0.12780516f},
+        {0.06153171f, 0.7303191f, 0.20814919f},
+        {0.05980929f, -0.04343518f, 0.98362589f},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
@@ -67,7 +67,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

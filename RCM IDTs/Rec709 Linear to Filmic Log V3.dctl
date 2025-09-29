@@ -5,10 +5,10 @@ DEFINE_UI_PARAMS(skip_desat, Skip Desaturation, DCTLUI_CHECK_BOX, 0)
 // clang-format on
 
 __DEVICE__ float linear_to_logv3(float invec) {
-    float l = (_log2f(invec) + 8.0) * 0.125;
-    float x = _mix(_fmaxf(0.0, l), invec, 0.1267);
-    float y = 0.28985507246;
-    float out = _fmaxf(0.0, _mix(x, _powf(invec, y), invec));
+    float l = (_log2f(invec) + 8.0f) * 0.125f;
+    float x = _mix(_fmaxf(0.0f, l), invec, 0.1267f);
+    float y = 0.28985507246f;
+    float out = _fmaxf(0.0f, _mix(x, _powf(invec, y), invec));
     return out;
 }
 
@@ -17,8 +17,8 @@ __DEVICE__ inline float dot_product(float3 a, float3 b) {
 }
 
 __DEVICE__ float3 desaturate(float3 invec) {
-    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
-    float o = 0.16667 * _logf(p) + 1.0;
+    float p = dot_product(invec, make_float3(0.2126f, 0.7152f, 0.0722f));
+    float o = 0.16667f * _logf(p) + 1.0f;
     float3 monochrome = make_float3(p, p, p);   // might not be what they mean
     float3 output = _mix(monochrome, invec, o); // `monochrome` has more weight for darker pixels.
     return output;

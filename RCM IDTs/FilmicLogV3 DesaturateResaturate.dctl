@@ -23,8 +23,8 @@ __DEVICE__ inline float3 unmixf3(float3 b, float3 c, float t) {
 }
 
 __DEVICE__ float3 desaturate(float3 invec) {
-    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
-    float o = 0.16667 * _logf(p) + 1.0;
+    float p = dot_product(invec, make_float3(0.2126f, 0.7152f, 0.0722f));
+    float o = 0.16667f * _logf(p) + 1.0f;
     float3 monochrome = make_float3(p, p, p);   // might not be what they mean
     float3 output = _mix(monochrome, invec, o); // `monochrome` has more weight for darker pixels.
     return output;
@@ -33,12 +33,12 @@ __DEVICE__ float3 desaturate(float3 invec) {
 __DEVICE__ float3 resaturate(float3 invec) {
     // as desaturate is a linear mixture between the saturated vector and monochrome
     // the desaturated vector should have the same luminance.
-    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
+    float p = dot_product(invec, make_float3(0.2126f, 0.7152f, 0.0722f));
     float3 monochrome = make_float3(p, p, p);
 
-    float o = 0.16667 * _logf(p) + 1.0;
+    float o = 0.16667f * _logf(p) + 1.0f;
 
-    float3 output = unmixf3(monochrome, invec, 1.0 - o);
+    float3 output = unmixf3(monochrome, invec, 1.0f - o);
     return output;
 }
 

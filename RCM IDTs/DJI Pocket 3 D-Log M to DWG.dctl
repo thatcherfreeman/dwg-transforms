@@ -9,22 +9,22 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 __DEVICE__ float pocket_3_dlogm_to_linear(float x) {
     // Based on clips shot on DJI Pocket 3 in D-Log M
 
-    const float x_shift = -2.428226947784424;
-    const float y_shift = 0.9327186346054077;
-    const float scale = 5.612990379333496;
-    const float slope = 1.0151796340942383;
-    const float slope2 = 1.8734303712844849;
-    const float intercept = 0.5178895592689514;
-    const float cut = 0.6034245491027832;
+    const float x_shift = -2.428226947784424f;
+    const float y_shift = 0.9327186346054077f;
+    const float scale = 5.612990379333496f;
+    const float slope = 1.0151796340942383f;
+    const float slope2 = 1.8734303712844849f;
+    const float intercept = 0.5178895592689514f;
+    const float cut = 0.6034245491027832f;
 
-    float tmp = _powf(2.0, x * scale + y_shift) + x_shift;
+    float tmp = _powf(2.0f, x * scale + y_shift) + x_shift;
     float out;
     if (tmp < cut) {
         out = tmp * slope + intercept;
     } else {
         out = tmp * slope2;
     }
-    out *= 0.18 / 12.4054;
+    out *= 0.18f / 12.4054f;
     return out;
 }
 
@@ -58,9 +58,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     // rgbw: [[0.74975796 0.27494141 1.        ]] [[0.23212818 0.67973281 1.        ]] [[ 0.14171257 -0.08093975  1.        ]] [[0.3127
     // 0.329  1.    ]]
     float matrix[3][3] = {
-        {0.69848738, 0.19665509, 0.10485752},
-        {-0.00579783, 1.00886749, -0.00306966},
-        {0.03929425, 0.20805949, 0.75264626},
+        {0.69848738f, 0.19665509f, 0.10485752f},
+        {-0.00579783f, 1.00886749f, -0.00306966f},
+        {0.03929425f, 0.20805949f, 0.75264626f},
     };
 
     float3 rgb2;
@@ -70,7 +70,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb2 = rgb;
     }
 
-    float3 out = make_float3(0.0, 0.0, 0.0);
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
     if (output_tone_curve == DI) {
         out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
     } else if (output_tone_curve == LINEAR) {

@@ -27,9 +27,9 @@ __DEVICE__ inline float3 unmixf3(float3 b, float3 c, float t) {
 __DEVICE__ float logv3_to_linear(float invec) {
     // This function is based on the official documentation but it
     // is not a true inverse of the linear_to_logv3 function.
-    float u = _exp2f((invec / 0.125) - 8.0);
-    float x = 1.1612159730893894;
-    float y = 0.6090138106343165;
+    float u = _exp2f((invec / 0.125f) - 8.0f);
+    float x = 1.1612159730893894f;
+    float y = 0.6090138106343165f;
     float out = _powf(u, _mix(x, y, invec));
     return out;
 }
@@ -43,24 +43,24 @@ __DEVICE__ float interpolate(float x, float low, float high) {
 __DEVICE__ float logv3_to_linear_approx(float y) {
     // Inverse of a piece-wise approximation of the lin2logv3
     // because the lin2log function is not algebraically invertible.
-    const float gamma = 0.27698768;
-    const float log_cutoff = 0.55;
-    const float smoothing = 0.05;
-    float exp_portion = _exp2f(((y * 9.0 / 8.0) - 1.0) * 8.0);
-    float pow_portion = _powf(y, 1.0 / gamma);
+    const float gamma = 0.27698768f;
+    const float log_cutoff = 0.55f;
+    const float smoothing = 0.05f;
+    float exp_portion = _exp2f(((y * 9.0f / 8.0f) - 1.0f) * 8.0f);
+    float pow_portion = _powf(y, 1.0f / gamma);
     // Interpolate because the two pieces don't quite meet at a single point.
     float interp = interpolate(y, log_cutoff - smoothing, log_cutoff + smoothing);
-    float output = pow_portion * interp + (1.0 - interp) * exp_portion;
+    float output = pow_portion * interp + (1.0f - interp) * exp_portion;
     return output;
 }
 
 __DEVICE__ float3 resaturate(float3 invec) {
     // Inverse of the nonlinear desaturation function applied by
     // filmic prior to converting lin to log.
-    float p = dot_product(invec, make_float3(0.2126, 0.7152, 0.0722));
+    float p = dot_product(invec, make_float3(0.2126f, 0.7152f, 0.0722f));
     float3 monochrome = make_float3(p, p, p);
-    float o = 0.16667 * _logf(p) + 1.0;
-    float3 output = unmixf3(monochrome, invec, 1.0 - o);
+    float o = 0.16667f * _logf(p) + 1.0f;
+    float3 output = unmixf3(monochrome, invec, 1.0f - o);
     return output;
 }
 
@@ -92,9 +92,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Assumed Rec709 primaries
     float matrix[3][3] = {
-        {0.56276746, 0.32351659, 0.11371596},
-        {0.07775464, 0.74957735, 0.17266802},
-        {0.0646692, 0.19199869, 0.74333211},
+        {0.56276746f, 0.32351659f, 0.11371596f},
+        {0.07775464f, 0.74957735f, 0.17266802f},
+        {0.0646692f, 0.19199869f, 0.74333211f},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {

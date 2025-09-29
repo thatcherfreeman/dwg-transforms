@@ -9,12 +9,12 @@ DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {D
 
 __DEVICE__ float zlog2_to_linear(float x) {
     // zlog2 to linear fit from clips from the E2 and the F6.
-    const float base = 883.01708984375;
-    const float offset = -0.2871415317058563;
-    const float scale = 0.09746987372636795;
-    const float slope = 2.7828056812286377;
-    const float intercept = -0.46649909019470215;
-    const float cut = 0.212049663066864;
+    const float base = 883.01708984375f;
+    const float offset = -0.2871415317058563f;
+    const float scale = 0.09746987372636795f;
+    const float slope = 2.7828056812286377f;
+    const float intercept = -0.46649909019470215f;
+    const float cut = 0.212049663066864f;
 
     if (x < cut) {
         return slope * x + intercept;
@@ -25,12 +25,12 @@ __DEVICE__ float zlog2_to_linear(float x) {
 
 __DEVICE__ float linear_to_zlog2(float x) {
     // Inverse of zlog2 to linear
-    const float base = 883.01708984375;
-    const float offset = -0.2871415317058563;
-    const float scale = 0.09746987372636795;
-    const float slope = 2.7828056812286377;
-    const float intercept = -0.46649909019470215;
-    const float cut = 0.212049663066864;
+    const float base = 883.01708984375f;
+    const float offset = -0.2871415317058563f;
+    const float scale = 0.09746987372636795f;
+    const float slope = 2.7828056812286377f;
+    const float intercept = -0.46649909019470215f;
+    const float cut = 0.212049663066864f;
 
     if (x < slope * cut + intercept) {
         return (x - intercept) / slope;
@@ -66,7 +66,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     if (input_tone_curve == IN_ZLOG2) {
         rgb = make_float3(zlog2_to_linear(p_R), zlog2_to_linear(p_G), zlog2_to_linear(p_B));
         // Gain needed to set 45 IRE in zlog2 to 0.18 after the fitted curve.
-        const float gain = 0.1013439;
+        const float gain = 0.1013439f;
         rgb *= gain;
     } else {
         rgb = make_float3(p_R, p_G, p_B);
@@ -77,9 +77,9 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         // Estimated Primaries:
         // [[0.73413744 0.17410495 1.        ]] [[0.14004897 1.21937481 1.        ]] [[ 0.14315259 -0.13832226  1.        ]] [[0.3127
         // 0.329  1.    ]]
-        {0.92109809, -0.06587011, 0.14477202},
-        {-0.09411824, 1.1806335, -0.08651526},
-        {0.1196125, -0.11106066, 0.99144817},
+        {0.92109809f, -0.06587011f, 0.14477202f},
+        {-0.09411824f, 1.1806335f, -0.08651526f},
+        {0.1196125f, -0.11106066f, 0.99144817f},
     };
     float3 rgb2;
     if (output_color_gamut == DWG) {
