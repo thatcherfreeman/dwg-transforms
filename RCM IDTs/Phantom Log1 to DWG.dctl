@@ -1,24 +1,43 @@
 // Written by Thatcher Freeman
-// Based on a clip shot on a Phantom Flex4k and decoded two ways in PCC
+// Based on the official data sheet.
 // clang-format off
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
 
 // clang-format on
 
-__DEVICE__ float phantom_log1_to_linear(float x) {
-    const float base = 233.7124786376953f;
-    const float offset = -0.00003856978582916781f;
-    const float scale = 0.004211863968521357f;
-    const float slope = 0.06323110312223434f;
-    const float intercept = -0.00018377490050625056f;
-    const float cut = 0.1857178807258606f;
+__DEVICE__ float linear_to_phantom_log1(float x) {
+    const float a = 0.182f;
+    const float b = 30.0f;
+    const float c = 0.011375f;
+    const float d = 0.0f;
+    const float e = 0.377675f;
+    const float s = 16.0f;
 
-    if (x < cut) {
-        return slope * x + intercept;
+    float out;
+    if (x < c) {
+        out = s * x;
     } else {
-        return _powf(base, x) * scale + offset;
+        out = a * _logf(b * x + d) + e;
     }
+    return out;
+}
+
+__DEVICE__ float phantom_log1_to_linear(float x) {
+    const float a = 0.182f;
+    const float b = 30.0f;
+    const float c = 0.011375f;
+    const float d = 0.0f;
+    const float e = 0.377675f;
+    const float s = 16.0f;
+
+    float out;
+    if (x < s * c) {
+        out = x / s;
+    } else {
+        out = (_expf((x - e) / a) - d) / b;
+    }
+    return out;
 }
 
 __DEVICE__ float linear_to_di(float x) {
@@ -45,8 +64,8 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
     float3 rgb = make_float3(phantom_log1_to_linear(p_R), phantom_log1_to_linear(p_G), phantom_log1_to_linear(p_B));
-    // Gain estimated to match the default Rec709 decode.
-    const float gain = 3.0f;
+    // Gain gained to match the old dctl, approximately matching the rec709 decode.
+    const float gain = _exp2f(1.55f);
     rgb *= gain;
 
     // Assumed Rec709 primaries
