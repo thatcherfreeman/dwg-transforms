@@ -65,7 +65,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         rgb = make_float3(p_R, p_G, p_B);
     }
 
-    rgb *= 0.18f / 0.07f;
+    rgb *= 0.18f / 0.075f;
 
     // Apply matrix
     float3 rgb2;
