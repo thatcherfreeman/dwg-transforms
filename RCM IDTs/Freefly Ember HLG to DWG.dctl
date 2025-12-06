@@ -61,13 +61,12 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float3 rgb;
     if (input_tone_curve == EMBER_HLG) {
         rgb = make_float3(ember_hlg_to_linear(p_R), ember_hlg_to_linear(p_G), ember_hlg_to_linear(p_B));
+        // Map 37% input to mid gray.
+        const float gain = 0.18f / 0.15f;
+        rgb *= gain;
     } else if (input_tone_curve == EMBER_LINEAR) {
         rgb = make_float3(p_R, p_G, p_B);
     }
-
-    // Map 37% input to mid gray.
-    const float gain = 0.18f / 0.15f;
-    rgb *= gain;
 
     // Assumed Rec2020 primaries
     float matrix[3][3] = {
