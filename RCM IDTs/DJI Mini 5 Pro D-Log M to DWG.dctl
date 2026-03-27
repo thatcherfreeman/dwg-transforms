@@ -1,0 +1,78 @@
+// Written by Thatcher Freeman
+// clang-format off
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
+
+__DEVICE__ float mini_5_pro_dlogm_to_linear(float x) {
+    // Based on clips shot on Mini 5 Pro, in D-Log M
+    // Maps 40% IRE to 18% gray.
+    const float x_shift = -2.4226536750793457f;
+    const float y_shift = 0.967625617980957f;
+    const float scale = 5.9235968589782715f;
+    const float slope = 0.9033806920051575f;
+    const float slope2 = 2.531388759613037f;
+    const float intercept = 0.28770846128463745f;
+    const float cut = 0.17672421038150787f;
+    const float mid_gray_scaling = 0.009255358017981052f;
+
+    float tmp = _powf(2.0f, x * scale + y_shift) + x_shift;
+    float out;
+    if (tmp < cut) {
+        out = tmp * slope + intercept;
+    } else {
+        out = tmp * slope2;
+    }
+    out *= mid_gray_scaling;
+    return out;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb = make_float3(mini_5_pro_dlogm_to_linear(p_R), mini_5_pro_dlogm_to_linear(p_G), mini_5_pro_dlogm_to_linear(p_B));
+
+    // Estimated xyY RGBW Primaries:
+    //  [[0.75822323 0.30436264 1.        ]] [[0.32016181 0.67953703 1.        ]] [[0.12655525 0.01051107 1.        ]] [[0.3127 0.329  1. ]]
+    float matrix[3][3] = {
+        {0.56097231f, 0.35824417f, 0.08078352f},
+        {0.00910847f, 0.85414357f, 0.13674796f},
+        {0.01815079f, 0.1158459f, 0.8660033f},
+    };
+
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix, rgb);
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
+    }
+
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
+    if (output_tone_curve == DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
