@@ -1,0 +1,75 @@
+// Written by Thatcher Freeman
+// Based on the Apple Log White paper
+// Apple Log is the same as apple log 2, but with rec2020 primaries
+// clang-format off
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
+
+// clang-format on
+
+__DEVICE__ float apple_log_to_lin(float x) {
+    float out;
+    const float R0 = -0.05641088f;
+    const float Rt = 0.01f;
+    const float c = 47.28711236f;
+    const float b = 0.00964052f;
+    const float y = 0.08550479f;
+    const float d = 0.69336945f;
+    const float Pt = c * _powf(Rt - R0, 2.0f);
+
+    if (x >= Pt) {
+        out = _exp2f((x - d) / y) - b;
+    } else if (x > 0.0f) {
+        out = _sqrtf(x / c) + R0;
+    } else {
+        out = R0;
+    }
+    return out;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb = make_float3(apple_log_to_lin(p_R), apple_log_to_lin(p_G), apple_log_to_lin(p_B));
+
+    // Rec2020 primaries.
+    float matrix[3][3] = {
+        {0.8921121209464458f, 0.0243691758712168f, 0.0835187031823371f},
+        {0.0326166017640850f, 0.7861375169041124f, 0.1812458813318025f},
+        {0.0699770511856338f, 0.1047494919038274f, 0.8252734569105387f},
+    };
+    float3 rgb2;
+    if (output_color_gamut == DWG) {
+        rgb2 = mv_33_3(matrix, rgb);
+    } else if (output_color_gamut == NATIVE) {
+        rgb2 = rgb;
+    }
+
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
+    if (output_tone_curve == DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
