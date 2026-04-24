@@ -1,0 +1,72 @@
+// Written by Thatcher Freeman
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+// E-Gamut 2 Primaries:
+// red: 0.83, 0.31
+// green: 0.15, 0.95,
+// blue: 0.065, -0.0805
+// White is D65
+
+__DEVICE__ float tlog_to_linear(float t) {
+    const float w = 128.0f;
+    const float g = 16.0f;
+    const float o = 0.075f;
+
+    float b = 1 / (0.7107f + 1.2359f * _logf(w * g));
+    float gs = g / (1 - o);
+    float C = b / gs;
+    float a = 1 - b * _logf(w + C);
+    float y0 = a + b * _logf(C);
+    float s = (1 - o) / (1 - y0);
+    float A = 1 + (a - 1) * s;
+    float B = b * s;
+    float G = gs * s;
+
+    float x;
+    if (t < o) {
+        x = (t - o) / G;
+    } else {
+        x = _expf((t - A) / B) - C;
+    }
+    return x;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 input_color = make_float3(p_R, p_G, p_B);
+    float3 out = input_color;
+
+    out.x = tlog_to_linear(out.x);
+    out.y = tlog_to_linear(out.y);
+    out.z = tlog_to_linear(out.z);
+    float egamut_to_dwg[3][3] = {
+        {1.0578255552097571f, -0.0219703415239351f, -0.0358552136858199f},
+        {-0.0198970265421796f, 0.9601751479347004f, 0.0597218786074793f},
+        {-0.0168060141929345f, 0.0324829386891855f, 0.9843230755037500f},
+    };
+    out = mv_33_3(egamut_to_dwg, out);
+    out.x = linear_to_di(out.x);
+    out.y = linear_to_di(out.y);
+    out.z = linear_to_di(out.z);
+    return out;
+}
