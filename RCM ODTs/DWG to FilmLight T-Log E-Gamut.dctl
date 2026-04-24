@@ -1,0 +1,73 @@
+// Written by Thatcher Freeman
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+// E-Gamut Primaries:
+//     [0.8000, 0.3177],
+//     [0.1800, 0.9000],
+//     [0.0650, -0.0805],
+// White is D65
+
+__DEVICE__ float linear_to_tlog(float x) {
+    const float w = 128.0f;
+    const float g = 16.0f;
+    const float o = 0.075f;
+
+    float b = 1.0f / (0.7107f + 1.2359f * _logf(w * g));
+    float gs = g / (1.0f - o);
+    float C = b / gs;
+    float a = 1.0f - b * _logf(w + C);
+    float y0 = a + b * _logf(C);
+    float s = (1.0f - o) / (1.0f - y0);
+    float A = 1.0f + (a - 1.0f) * s;
+    float B = b * s;
+    float G = gs * s;
+
+    float t;
+    if (x < 0.0f) {
+        t = G * x + o;
+    } else {
+        t = _logf(x + C) * B + A;
+    }
+    return t;
+}
+
+__DEVICE__ float di_to_linear(float t) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f; // Should be equal to ((cut2 - f) / e)
+    const float log_cut = 0.02740668f; // should be equal to (e * cut1 + f)
+
+    if (t > log_cut) {
+        return _exp2f((t / c) - b) - a;
+    } else {
+        return t / m;
+    }
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 input_color = make_float3(p_R, p_G, p_B);
+    float3 out = input_color;
+
+    // direction == TO_EGAMUT
+    out.x = di_to_linear(out.x);
+    out.y = di_to_linear(out.y);
+    out.z = di_to_linear(out.z);
+    float dwg_to_egamut[3][3] = {
+        {0.9940269980318612, -0.0321886742701012, 0.0381616762382378},
+        {-0.0049189842556512, 1.0700195065367444, -0.0651005222810930},
+        {0.0030338474606995, -0.0499497539146331, 1.0469159064539328},
+    };
+    out = mv_33_3(dwg_to_egamut, out);
+    out.x = linear_to_tlog(out.x);
+    out.y = linear_to_tlog(out.y);
+    out.z = linear_to_tlog(out.z);
+    return out;
+}
