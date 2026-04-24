@@ -7,10 +7,10 @@ __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
     return out;
 }
 
-// E-Gamut Primaries:
-//     [0.8000, 0.3177],
-//     [0.1800, 0.9000],
-//     [0.0650, -0.0805],
+// E-Gamut 2 Primaries:
+// red: 0.83, 0.31
+// green: 0.15, 0.95,
+// blue: 0.065, -0.0805
 // White is D65
 
 __DEVICE__ float linear_to_tlog(float x) {
@@ -60,12 +60,12 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     out.x = di_to_linear(out.x);
     out.y = di_to_linear(out.y);
     out.z = di_to_linear(out.z);
-    float dwg_to_egamut[3][3] = {
-        {0.9462493888230773, 0.0205277615162660, 0.0332228496606494},
-        {0.0186418334482096, 1.0440231799283490, -0.0626650133765548},
-        {0.0155407706131804, -0.0341025745791140, 1.0185618039659325},
+    float dwg_to_egamut2[3][3] = {
+        {0.9462493888230773f, 0.0205277615162660f, 0.0332228496606494f},
+        {0.0186418334482096f, 1.0440231799283490f, -0.0626650133765548f},
+        {0.0155407706131804f, -0.0341025745791140f, 1.0185618039659325f},
     };
-    out = mv_33_3(dwg_to_egamut, out);
+    out = mv_33_3(dwg_to_egamut2, out);
     out.x = linear_to_tlog(out.x);
     out.y = linear_to_tlog(out.y);
     out.z = linear_to_tlog(out.z);
