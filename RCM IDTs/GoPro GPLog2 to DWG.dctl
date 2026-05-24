@@ -1,0 +1,87 @@
+// Written by Thatcher Freeman
+// Based on white paper description at https://gopro.github.io/labs/log/
+// Duplicated to the specs folder.
+// clang-format off
+DEFINE_UI_PARAMS(input_transfer_function, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_GPLOG2, INPUT_LINEAR}, {GPLog2, Linear})
+DEFINE_UI_PARAMS(input_color_gamut, Input Color Gamut, DCTLUI_COMBO_BOX, 1, {INPUT_REC709, INPUT_REC2020}, {Rec.709, Rec.2020})
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_DI, OUTPUT_LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {OUTPUT_DWG, OUTPUT_NATIVE}, {DaVinci Wide Gamut, Camera Native (match input)})
+
+// clang-format on
+
+__DEVICE__ float powf(float base, float exp) {
+    return _copysignf(_powf(_fabs(base), exp), base);
+}
+
+__DEVICE__ float gplog2_to_linear(float x) {
+    float out = (powf(600.0f, x) - 1.0f) / (600.0f - 1.0f);
+    return out;
+}
+
+__DEVICE__ float linear_to_di(float x) {
+    const float a = 0.0075f;
+    const float b = 7.0f;
+    const float c = 0.07329248f;
+    const float m = 10.44426855f;
+    const float lin_cut = 0.00262409f;
+    // const float log_cut = 0.02740668f;
+
+    if (x > lin_cut) {
+        return (_log2f(x + a) + b) * c;
+    } else {
+        return x * m;
+    }
+}
+
+__DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
+    float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
+                             mat[1][0] * v.x + mat[1][1] * v.y + mat[1][2] * v.z,
+                             mat[2][0] * v.x + mat[2][1] * v.y + mat[2][2] * v.z);
+    return out;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb;
+    if (input_transfer_function == INPUT_GPLOG2) {
+        rgb = make_float3(gplog2_to_linear(p_R), gplog2_to_linear(p_G), gplog2_to_linear(p_B));
+    } else if (input_transfer_function == INPUT_LINEAR) {
+        rgb = make_float3(p_R, p_G, p_B);
+    }
+
+    // Rec2020 Primaries
+    float rec2020_to_dwg[3][3] = {
+        {0.89211212094644609660f, 0.02436917587121703588f, 0.08351870318233775570f},
+        {0.03261660176408529704f, 0.78613751690411282080f, 0.18124588133180258298f},
+        {0.06997705118563400661f, 0.10474949190382756847f, 0.82527345691053854981f},
+    };
+
+    // Rec709 Primaries
+    float rec709_to_dwg[3][3] = {
+        {0.56276745600710809114f, 0.32351658870396093892f, 0.11371595528893306548f},
+        {0.07775463528504603095f, 0.74957734616322313492f, 0.17266801855173180558f},
+        {0.06466919991632819054f, 0.19199869204629937958f, 0.74333210803737226335f},
+    };
+    float3 rgb2;
+    if (output_color_gamut == OUTPUT_DWG) {
+        if (input_color_gamut == INPUT_REC2020) {
+            rgb2 = mv_33_3(rec2020_to_dwg, rgb);
+        } else if (input_color_gamut == INPUT_REC709) {
+            rgb2 = mv_33_3(rec709_to_dwg, rgb);
+        } else {
+            rgb2 = rgb;
+        }
+    } else if (output_color_gamut == OUTPUT_NATIVE) {
+        rgb2 = rgb;
+    }
+
+    // Maps mid gray to 554/1023, the recommended mid gray in the white paper.
+    rgb2 *= 0.18f / 0.05167f;
+
+    float3 out = make_float3(0.0f, 0.0f, 0.0f);
+    if (output_tone_curve == OUTPUT_DI) {
+        out = make_float3(linear_to_di(rgb2.x), linear_to_di(rgb2.y), linear_to_di(rgb2.z));
+    } else if (output_tone_curve == OUTPUT_LINEAR) {
+        out = rgb2;
+    }
+    return out;
+}
