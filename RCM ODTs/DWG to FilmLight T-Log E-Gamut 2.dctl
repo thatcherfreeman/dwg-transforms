@@ -1,4 +1,9 @@
 // Written by Thatcher Freeman
+// clang-format off
+DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_DI, INPUT_LINEAR}, {DaVinci Intermediate, Linear})
+DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_TLOG, OUTPUT_LINEAR}, {FilmLight T-Log, Linear})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {E_GAMUT2, DWG}, {E-Gamut 2, DaVinci Wide Gamut,})
+// clang-format on
 
 __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
     float3 out = make_float3(mat[0][0] * v.x + mat[0][1] * v.y + mat[0][2] * v.z,
@@ -57,17 +62,24 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
     float3 out = input_color;
 
     // direction == TO_EGAMUT
-    out.x = di_to_linear(out.x);
-    out.y = di_to_linear(out.y);
-    out.z = di_to_linear(out.z);
+    if (input_tone_curve == INPUT_DI) {
+        out.x = di_to_linear(out.x);
+        out.y = di_to_linear(out.y);
+        out.z = di_to_linear(out.z);
+    }
+
     float dwg_to_egamut2[3][3] = {
         {0.9462493888230773f, 0.0205277615162660f, 0.0332228496606494f},
         {0.0186418334482096f, 1.0440231799283490f, -0.0626650133765548f},
         {0.0155407706131804f, -0.0341025745791140f, 1.0185618039659325f},
     };
-    out = mv_33_3(dwg_to_egamut2, out);
-    out.x = linear_to_tlog(out.x);
-    out.y = linear_to_tlog(out.y);
-    out.z = linear_to_tlog(out.z);
+    if (output_color_gamut == E_GAMUT2) {
+        out = mv_33_3(dwg_to_egamut2, out);
+    }
+    if (output_tone_curve == OUTPUT_TLOG) {
+        out.x = linear_to_tlog(out.x);
+        out.y = linear_to_tlog(out.y);
+        out.z = linear_to_tlog(out.z);
+    }
     return out;
 }
