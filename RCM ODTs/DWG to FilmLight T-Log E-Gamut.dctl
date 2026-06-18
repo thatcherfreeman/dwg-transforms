@@ -72,7 +72,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
         {-0.0049189842556512f, 1.0700195065367444f, -0.0651005222810930f},
         {0.0030338474606995f, -0.0499497539146331f, 1.0469159064539328f},
     };
-    if (output_color_gamut == E_GAMUT2) {
+    if (output_color_gamut == E_GAMUT) {
         out = mv_33_3(dwg_to_egamut, out);
     }
     if (output_tone_curve == OUTPUT_TLOG) {

@@ -2,7 +2,7 @@
 // clang-format off
 DEFINE_UI_PARAMS(input_tone_curve, Input Transfer Function, DCTLUI_COMBO_BOX, 0, {INPUT_TLOG, INPUT_LINEAR}, {FilmLight T-Log, Linear})
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {OUTPUT_DI, OUTPUT_LINEAR}, {DaVinci Intermediate, Linear})
-DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, E_GAMUT}, {DaVinci Wide Gamut, E-Gamut})
+DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, E_GAMUT2}, {DaVinci Wide Gamut, E-Gamut 2})
 // clang-format on
 
 __DEVICE__ float3 mv_33_3(float mat[3][3], float3 v) {
