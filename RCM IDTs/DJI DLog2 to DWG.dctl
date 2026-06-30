@@ -17,9 +17,14 @@ __DEVICE__ float dlog2_to_lin(float in) {
     float in_limit_rev_1 = 0.304985337243402f;
     float in_limit_rev_2 = 0.148314799066323f;
 
-    float out = in >= in_limit_rev_1 ? (H / (_exp2f(a) - 1.0f) * (_exp2f(a * in) - 1))
-                                     : (in >= in_limit_rev_2 ? (_exp2f((in - b1) / k1 + _log2f(in_limit1))) : ((in - b2) / k2 + in_limit2));
-
+    float out;
+    if (in >= in_limit_rev_1) {
+        out = (H / (_exp2f(a) - 1.0f) * (_exp2f(a * in) - 1));
+    } else if (in >= in_limit_rev_2) {
+        out = (_exp2f((in - b1) / k1 + _log2f(in_limit1)));
+    } else {
+        out = ((in - b2) / k2 + in_limit2);
+    }
     return out;
 }
 
