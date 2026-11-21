@@ -1,6 +1,6 @@
 // Written by Thatcher Freeman
 // Based on test shots on Pixboom Spark, decoded with Pixboom Cine 0.5.2 to rec709
-// Maps mid gray to 0.38 code value, which puts 3.1 stops between mid gray and clipping.
+// Maps mid gray to 0.30 code value, which puts 3.8 stops between mid gray and clipping.
 // clang-format off
 DEFINE_UI_PARAMS(output_tone_curve, Output Transfer Function, DCTLUI_COMBO_BOX, 0, {DI, LINEAR}, {DaVinci Intermediate, Linear})
 DEFINE_UI_PARAMS(output_color_gamut, Output Color Gamut, DCTLUI_COMBO_BOX, 0, {DWG, NATIVE}, {DaVinci Wide Gamut, Camera Native})
@@ -15,7 +15,7 @@ __DEVICE__ float pixboom_spark_rec709_to_linear(float x) {
     const float intercept = 0.006632019300013781f;
     const float cut = 0.009398377500474453f;
     const float y_cut = cut * slope + intercept;
-    const float mid_gray_scaling = 1.399200677871704f;
+    const float mid_gray_scaling = 2.282982110977173f;
 
     float out;
     if (x < y_cut) {
